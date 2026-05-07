@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PG Pro — Sign In</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<div class="login-page">
+
+  <!-- ══ Left hero ══ -->
+  <div class="lg-left">
+    <div class="lg-hero">
+      <div class="lg-logo-row">
+        <div class="lg-logo-ico">🏠</div>
+        <div class="lg-logo-txt">
+          <h1>PG Pro</h1>
+          <span>Management System</span>
+        </div>
+      </div>
+
+      <div class="lg-tag">
+        Manage your PG<br>with <em>precision</em>
+      </div>
+      <p class="lg-desc">
+        A complete end-to-end platform for PG owners to manage tenants, rooms, payments, bills, complaints, and analytics — all in one place.
+      </p>
+
+      <div class="feat-list">
+        <div class="feat-item"><div class="feat-ico">👥</div>Full Tenant Lifecycle Management</div>
+        <div class="feat-item"><div class="feat-ico">💳</div>Automated Rent &amp; Payment Tracking</div>
+        <div class="feat-item"><div class="feat-ico">⚡</div>Utility Bill Auto-Splitting</div>
+        <div class="feat-item"><div class="feat-ico">📊</div>Income, Expense &amp; Profit Reports</div>
+        <div class="feat-item"><div class="feat-ico">🔧</div>Complaint &amp; Maintenance Tracking</div>
+        <div class="feat-item"><div class="feat-ico">📢</div>Notice Board &amp; Announcements</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Right form ══ -->
+  <div class="lg-right">
+
+    <!-- LOGIN -->
+    <div class="lg-form" id="loginBox">
+      <h2>Welcome back</h2>
+      <p class="sub">Sign in to your dashboard</p>
+
+      <div class="fg">
+        <label class="fl">Email Address</label>
+        <input type="email" id="lEmail" class="fc" placeholder="owner@example.com" autocomplete="email">
+      </div>
+      <div class="fg">
+        <label class="fl">Password</label>
+        <div style="position:relative">
+          <input type="password" id="lPwd" class="fc" placeholder="Your password" autocomplete="current-password" style="padding-right:42px">
+          <button onclick="togglePwd('lPwd')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--tx3);font-size:16px" id="lPwdEye">👁</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary w-full" id="loginBtn" onclick="doLogin()" style="width:100%;justify-content:center;margin-top:4px">
+        Sign In →
+      </button>
+
+      <p class="lg-toggle">First time? <a onclick="showRegister()">Create owner account</a></p>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="lg-form hidden" id="registerBox">
+      <h2>Create Account</h2>
+      <p class="sub">Set up your PG Pro workspace</p>
+
+      <div class="fr">
+        <div class="fg"><label class="fl">Full Name *</label><input type="text" id="rName" class="fc" placeholder="Your name"></div>
+        <div class="fg"><label class="fl">Phone</label><input type="tel" id="rPhone" class="fc" placeholder="+91 9999999999"></div>
+      </div>
+      <div class="fg"><label class="fl">Email Address *</label><input type="email" id="rEmail" class="fc" placeholder="owner@example.com"></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Password *</label><input type="password" id="rPwd" class="fc" placeholder="Min 6 chars"></div>
+        <div class="fg"><label class="fl">Confirm *</label><input type="password" id="rCfm" class="fc" placeholder="Re-enter"></div>
+      </div>
+
+      <button class="btn btn-primary" id="registerBtn" onclick="doRegister()" style="width:100%;justify-content:center">
+        Create Account →
+      </button>
+
+      <p class="lg-toggle">Already registered? <a onclick="showLogin()">Sign in</a></p>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+  // Already logged in?
+  if (localStorage.getItem('pg_token')) window.location.href = '/';
+
+  function togglePwd(id) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  }
+  function showRegister() {
+    document.getElementById('loginBox').classList.add('hidden');
+    document.getElementById('registerBox').classList.remove('hidden');
+  }
+  function showLogin() {
+    document.getElementById('registerBox').classList.add('hidden');
+    document.getElementById('loginBox').classList.remove('hidden');
+  }
+
+  function toast(msg, type = 'info') {
+    let wrap = document.getElementById('toastWrap');
+    const icons = { ok:'✓', err:'✕', warn:'⚠', info:'ℹ' };
+    const div = document.createElement('div');
+    div.className = `toast t-${type}`;
+    div.innerHTML = `<span class="t-ico">${icons[type]||'ℹ'}</span><span class="t-msg">${msg}</span>`;
+    wrap.appendChild(div);
+    setTimeout(() => { div.style.opacity='0'; div.style.transform='translateX(110%)'; div.style.transition='.3s'; setTimeout(()=>div.remove(),300); }, 3500);
+  }
+
+  async function doLogin() {
+    const email = document.getElementById('lEmail').value.trim();
+    const pwd   = document.getElementById('lPwd').value;
+    if (!email || !pwd) return toast('Enter email and password', 'warn');
+    const btn = document.getElementById('loginBtn');
+    btn.textContent = 'Signing in…'; btn.disabled = true;
+    try {
+      const res  = await fetch('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password: pwd }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+      localStorage.setItem('pg_token', data.token);
+      localStorage.setItem('pg_user',  JSON.stringify(data.user));
+      window.location.href = '/';
+    } catch (err) {
+      toast(err.message, 'err');
+      btn.textContent = 'Sign In →'; btn.disabled = false;
+    }
+  }
+
+  async function doRegister() {
+    const name  = document.getElementById('rName').value.trim();
+    const phone = document.getElementById('rPhone').value.trim();
+    const email = document.getElementById('rEmail').value.trim();
+    const pwd   = document.getElementById('rPwd').value;
+    const cfm   = document.getElementById('rCfm').value;
+    if (!name || !email || !pwd) return toast('Name, email and password are required', 'warn');
+    if (pwd !== cfm)              return toast('Passwords do not match', 'err');
+    if (pwd.length < 6)           return toast('Password must be at least 6 characters', 'warn');
+    const btn = document.getElementById('registerBtn');
+    btn.textContent = 'Creating…'; btn.disabled = true;
+    try {
+      const res  = await fetch('/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, phone, email, password: pwd, role:'owner' }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      localStorage.setItem('pg_token', data.token);
+      localStorage.setItem('pg_user',  JSON.stringify(data.user));
+      window.location.href = '/';
+    } catch (err) {
+      toast(err.message, 'err');
+      btn.textContent = 'Create Account →'; btn.disabled = false;
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    if (!document.getElementById('loginBox').classList.contains('hidden')) doLogin();
+    else doRegister();
+  });
+</script>
+</body>
+</html>

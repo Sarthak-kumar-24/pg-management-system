@@ -1,0 +1,2088 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PG Pro — Dashboard</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <div class="app" id="app">
+      <!-- ════════════════════════════ SIDEBAR ════════════════════════════ -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sb-logo">
+          <div class="sb-logo-ico">🏠</div>
+          <div class="sb-logo-txt">
+            <div class="sb-logo-name">PG Pro</div>
+            <div class="sb-logo-sub">Management</div>
+          </div>
+        </div>
+
+        <nav class="sb-nav">
+          <div>
+            <span
+              class="sb-item active"
+              data-page="dashboard"
+              onclick="Nav.go('dashboard')"
+              ><span class="sb-ico">📊</span>Dashboard</span
+            >
+          </div>
+
+          <span class="sb-grp-lbl">Property</span>
+          <span
+            class="sb-item"
+            data-page="buildings"
+            onclick="Nav.go('buildings')"
+            ><span class="sb-ico">🏢</span>Buildings</span
+          >
+          <span class="sb-item" data-page="rooms" onclick="Nav.go('rooms')"
+            ><span class="sb-ico">🚪</span>Rooms &amp; Beds</span
+          >
+
+          <span class="sb-grp-lbl">Tenants</span>
+          <span class="sb-item" data-page="tenants" onclick="Nav.go('tenants')"
+            ><span class="sb-ico">👥</span>All Tenants</span
+          >
+          <span class="sb-item" data-page="vacate" onclick="Nav.go('vacate')"
+            ><span class="sb-ico">📦</span>Vacate Mgmt</span
+          >
+
+          <span class="sb-grp-lbl">Financials</span>
+          <span
+            class="sb-item"
+            data-page="payments"
+            onclick="Nav.go('payments')"
+            ><span class="sb-ico">💳</span>Payments</span
+          >
+          <span class="sb-item" data-page="bills" onclick="Nav.go('bills')"
+            ><span class="sb-ico">⚡</span>Bills &amp; Expenses</span
+          >
+
+          <span class="sb-grp-lbl">Communication</span>
+          <span class="sb-item" data-page="notices" onclick="Nav.go('notices')"
+            ><span class="sb-ico">📢</span>Notices</span
+          >
+          <span
+            class="sb-item"
+            data-page="complaints"
+            onclick="Nav.go('complaints')"
+          >
+            <span class="sb-ico">🔧</span>Complaints
+            <span class="sb-badge hidden" id="complaintBadge">0</span>
+          </span>
+
+          <span class="sb-grp-lbl">Analytics</span>
+          <span class="sb-item" data-page="reports" onclick="Nav.go('reports')"
+            ><span class="sb-ico">📈</span>Reports</span
+          >
+          <span
+            class="sb-item"
+            data-page="documents"
+            onclick="Nav.go('documents')"
+            ><span class="sb-ico">📁</span>Documents</span
+          >
+
+          <span class="sb-grp-lbl">System</span>
+          <span
+            class="sb-item owner-only"
+            data-page="users"
+            onclick="Nav.go('users')"
+            ><span class="sb-ico">👤</span>Users &amp; Roles</span
+          >
+          <span
+            class="sb-item"
+            data-page="settings"
+            onclick="Nav.go('settings')"
+            ><span class="sb-ico">⚙️</span>Settings</span
+          >
+        </nav>
+
+        <div class="sb-user" onclick="Nav.go('settings')">
+          <div class="u-av" id="sbUserAv">?</div>
+          <div style="flex: 1; min-width: 0">
+            <div class="u-nm" id="sbUserName">Loading…</div>
+            <div class="u-rl" id="sbUserRole">—</div>
+          </div>
+        </div>
+      </aside>
+      <div class="sb-overlay" id="sbOverlay" onclick="Nav.closeSidebar()"></div>
+
+      <!-- ════════════════════════════ MAIN ════════════════════════════ -->
+      <main class="main">
+        <header class="hdr">
+          <button
+            class="hamburger"
+            id="hamburger"
+            onclick="Nav.toggleSidebar()"
+          >
+            ☰
+          </button>
+          <div class="hdr-title" id="hdrTitle">Dashboard</div>
+          <div class="hdr-actions">
+            <button class="hdr-btn" title="Refresh" onclick="Nav.refresh()">
+              🔄
+            </button>
+            <button class="hdr-btn" title="Logout" onclick="Auth.logout()">
+              🚪
+            </button>
+          </div>
+        </header>
+
+        <div class="content">
+          <!-- ══════════════════ DASHBOARD ══════════════════ -->
+          <section class="page active" id="page-dashboard">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Dashboard</h1>
+                <p id="dashGreeting">Loading…</p>
+              </div>
+              <div class="pg-hdr-r">
+                <select
+                  class="fc sel-building"
+                  id="dashBldgFilter"
+                  onchange="Dashboard.load()"
+                  style="min-width: 160px"
+                ></select>
+              </div>
+            </div>
+            <div id="page-dashboard-body"></div>
+
+            <div class="stat-grid">
+              <div class="stat-card gold">
+                <div class="stat-ico ico-gold">👥</div>
+                <div class="stat-val" id="dashActiveTenants">—</div>
+                <div class="stat-lbl">Active Tenants</div>
+                <div class="stat-sub" id="dashTotalTenantsLabel">—</div>
+              </div>
+              <div class="stat-card blue">
+                <div class="stat-ico ico-blue">🏢</div>
+                <div class="stat-val" id="dashBuildings">—</div>
+                <div class="stat-lbl">Buildings</div>
+                <div class="stat-sub" id="dashRooms">—</div>
+              </div>
+              <div class="stat-card green">
+                <div class="stat-ico ico-green">🛏</div>
+                <div class="stat-val" id="dashOccupied">—</div>
+                <div class="stat-lbl">Occupied Beds</div>
+                <div class="stat-sub" id="dashVacantBeds">— vacant</div>
+              </div>
+              <div class="stat-card gold">
+                <div class="stat-ico ico-gold">💰</div>
+                <div class="stat-val" id="dashIncome">—</div>
+                <div class="stat-lbl">This Month Income</div>
+                <div class="stat-sub" id="dashMonthLabel">—</div>
+              </div>
+              <div class="stat-card red">
+                <div class="stat-ico ico-red">⚠️</div>
+                <div class="stat-val" id="dashPendingDues">—</div>
+                <div class="stat-lbl">Pending Dues</div>
+                <div class="stat-sub" id="dashPendingCount">—</div>
+              </div>
+              <div class="stat-card purple">
+                <div class="stat-ico ico-purple">🔧</div>
+                <div class="stat-val" id="dashComplaints">—</div>
+                <div class="stat-lbl">Open Complaints</div>
+                <div class="stat-sub">Need attention</div>
+              </div>
+            </div>
+
+            <!-- Occupancy bar -->
+            <div class="card mb-4" style="margin-bottom: 14px">
+              <div class="card-hdr">
+                <span class="card-title">Overall Occupancy</span>
+                <span
+                  class="font-s fw-7 c-gold"
+                  id="dashOccRate"
+                  style="font-size: 22px"
+                  >—%</span
+                >
+              </div>
+              <div class="prog" style="height: 10px">
+                <div
+                  class="prog-bar pb-gold"
+                  id="dashOccBar"
+                  style="width: 0%"
+                ></div>
+              </div>
+              <div class="flex just-b mt-2 tx-xs c-muted">
+                <span id="dashOccLeft">— of — beds</span>
+                <span id="dashVacRight">— vacant</span>
+              </div>
+            </div>
+
+            <div class="g2" style="margin-bottom: 14px">
+              <div class="card">
+                <div class="card-hdr">
+                  <span class="card-title"
+                    >Monthly Income
+                    <span id="dashChartYear" class="c-muted tx-sm"></span
+                  ></span>
+                </div>
+                <div
+                  class="bar-chart"
+                  id="dashIncomeChart"
+                  style="height: 120px"
+                ></div>
+              </div>
+              <div class="card">
+                <div class="card-hdr">
+                  <span class="card-title">Pending Dues</span
+                  ><button
+                    class="btn btn-sec btn-xs"
+                    onclick="Nav.go('payments')"
+                  >
+                    View All
+                  </button>
+                </div>
+                <div id="dashDuesList">
+                  <div class="spin-wrap"><div class="spinner"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="g2">
+              <div class="card">
+                <div class="card-hdr">
+                  <span class="card-title">Building Occupancy</span
+                  ><button
+                    class="btn btn-sec btn-xs"
+                    onclick="Nav.go('reports')"
+                  >
+                    Full Report
+                  </button>
+                </div>
+                <div id="dashOccTable"></div>
+              </div>
+              <div class="card">
+                <div class="card-hdr">
+                  <span class="card-title">Open Complaints</span
+                  ><button
+                    class="btn btn-sec btn-xs"
+                    onclick="Nav.go('complaints')"
+                  >
+                    View All
+                  </button>
+                </div>
+                <div id="dashComplaintsList"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ══════════════════ BUILDINGS ══════════════════ -->
+          <section class="page" id="page-buildings">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Buildings</h1>
+                <p>Manage your PG properties</p>
+              </div>
+              <div class="pg-hdr-r">
+                <button class="btn btn-primary" onclick="Buildings.openForm()">
+                  + Add Building
+                </button>
+              </div>
+            </div>
+            <div id="buildingList">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+          </section>
+
+          <!-- ══════════════════ ROOMS ══════════════════ -->
+          <section class="page" id="page-rooms">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Rooms &amp; Beds</h1>
+                <p>Room inventory and bed occupancy</p>
+              </div>
+              <div class="pg-hdr-r">
+                <button class="btn btn-primary" onclick="Rooms.openForm()">
+                  + Add Room
+                </button>
+              </div>
+            </div>
+            <div class="fbar">
+              <select
+                class="fc sel-building"
+                id="roomBldgFilter"
+                onchange="Rooms.load()"
+                style="min-width: 160px"
+              ></select>
+              <select
+                class="fc"
+                id="roomFloorFilter"
+                onchange="Rooms.load()"
+                style="min-width: 110px"
+              >
+                <option value="">All Floors</option>
+                <option value="1">Floor 1</option>
+                <option value="2">Floor 2</option>
+                <option value="3">Floor 3</option>
+                <option value="4">Floor 4</option>
+                <option value="5">Floor 5</option>
+              </select>
+              <select
+                class="fc"
+                id="roomStatusFilter"
+                onchange="Rooms.load()"
+                style="min-width: 130px"
+              >
+                <option value="">All Status</option>
+                <option value="available">Available</option>
+                <option value="occupied">Occupied</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
+            </div>
+            <div id="roomList">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+          </section>
+
+          <!-- ══════════════════ TENANTS ══════════════════ -->
+          <section class="page" id="page-tenants">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>All Tenants</h1>
+                <p>Tenant profiles and management</p>
+              </div>
+              <div class="pg-hdr-r">
+                <button class="btn btn-primary" onclick="Tenants.openForm()">
+                  + Add Tenant
+                </button>
+              </div>
+            </div>
+            <div class="fbar">
+              <div class="srch">
+                <span class="srch-ico">🔍</span
+                ><input
+                  type="text"
+                  id="tenantSearch"
+                  placeholder="Search name, phone…"
+                  oninput="Tenants.load()"
+                />
+              </div>
+              <select
+                class="fc sel-building"
+                id="tenantBldgFilter"
+                onchange="Tenants.load()"
+                style="min-width: 150px"
+              ></select>
+              <select
+                class="fc"
+                id="tenantStatusFilter"
+                onchange="Tenants.load()"
+                style="min-width: 130px"
+              >
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="notice_period">Notice Period</option>
+                <option value="vacated">Vacated</option>
+              </select>
+              <select
+                class="fc"
+                id="tenantBehaviorFilter"
+                onchange="Tenants.load()"
+                style="min-width: 130px"
+              >
+                <option value="">All Behavior</option>
+                <option value="disciplined">Disciplined</option>
+                <option value="moderate">Moderate</option>
+                <option value="mischief">Mischief</option>
+              </select>
+            </div>
+            <div id="tenantList">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+          </section>
+
+          <!-- ══════════════════ VACATE ══════════════════ -->
+          <section class="page" id="page-vacate">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Vacate Management</h1>
+                <p>Process tenant exits and final settlements</p>
+              </div>
+            </div>
+            <div class="g2" style="gap: 16px">
+              <div>
+                <div class="card">
+                  <div class="card-hdr">
+                    <span class="card-title">Process Vacate</span>
+                  </div>
+                  <form id="vacateForm" onsubmit="return false;">
+                    <div class="fg">
+                      <label class="fl">Select Tenant *</label>
+                      <select
+                        class="fc"
+                        id="vacateTenantSel"
+                        onchange="Vacate.onTenantChange()"
+                      >
+                        <option value="">Select active tenant…</option>
+                      </select>
+                    </div>
+                    <div id="vacateTenantCard"></div>
+                    <div class="fg">
+                      <label class="fl">Vacating Date</label>
+                      <input type="date" id="vacateDate" class="fc" />
+                    </div>
+                    <div class="fg">
+                      <label class="fl">Deposit Refund Amount (₹)</label>
+                      <input
+                        type="number"
+                        id="vacateRefund"
+                        class="fc"
+                        value="0"
+                        min="0"
+                      />
+                    </div>
+                    <div class="fcheck mb-3">
+                      <input type="checkbox" id="vacateRefundDeposit" />
+                      <label for="vacateRefundDeposit" class="tx-sm"
+                        >Create deposit refund payment record</label
+                      >
+                    </div>
+                    <div class="fg">
+                      <label class="fl">Notes / Reason</label>
+                      <textarea
+                        id="vacateNotes"
+                        class="fc"
+                        placeholder="Reason for vacating, handover notes…"
+                      ></textarea>
+                    </div>
+
+                    <!-- Checklist -->
+                    <div
+                      class="card"
+                      style="
+                        background: var(--s2);
+                        padding: 14px;
+                        margin-bottom: 14px;
+                      "
+                    >
+                      <div class="tx-sm fw-6 mb-3">📋 Vacate Checklist</div>
+                      <div class="flex flex-col gap-2">
+                        <label class="fcheck"
+                          ><input type="checkbox" id="chkKeys" /><span
+                            class="tx-sm"
+                            >Keys / access cards returned</span
+                          ></label
+                        >
+                        <label class="fcheck"
+                          ><input type="checkbox" id="chkMattress" /><span
+                            class="tx-sm"
+                            >Mattress / furniture checked</span
+                          ></label
+                        >
+                        <label class="fcheck"
+                          ><input type="checkbox" id="chkBills" /><span
+                            class="tx-sm"
+                            >All utility bills cleared</span
+                          ></label
+                        >
+                        <label class="fcheck"
+                          ><input type="checkbox" id="chkDues" /><span
+                            class="tx-sm"
+                            >Rent dues cleared</span
+                          ></label
+                        >
+                        <label class="fcheck"
+                          ><input type="checkbox" id="chkDeposit" /><span
+                            class="tx-sm"
+                            >Deposit refund processed</span
+                          ></label
+                        >
+                      </div>
+                    </div>
+
+                    <div id="vacateResult"></div>
+                    <button
+                      class="btn btn-danger w-full"
+                      id="vacateBtn"
+                      onclick="Vacate.process()"
+                      style="width: 100%; justify-content: center"
+                    >
+                      Process Vacate
+                    </button>
+                  </form>
+                </div>
+              </div>
+              <div>
+                <div class="card mb-4" style="margin-bottom: 14px">
+                  <div class="card-hdr">
+                    <span class="card-title">In Notice Period</span>
+                  </div>
+                  <div id="noticePeriodList"></div>
+                </div>
+                <div class="card">
+                  <div class="card-hdr">
+                    <span class="card-title">Recently Vacated</span>
+                  </div>
+                  <div id="recentVacatedList"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ══════════════════ PAYMENTS ══════════════════ -->
+          <section class="page" id="page-payments">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Payments</h1>
+                <p>Rent collection and payment tracking</p>
+              </div>
+              <div class="pg-hdr-r">
+                <button
+                  class="btn btn-sec"
+                  onclick="Payments.generateMonthly()"
+                >
+                  ⚡ Generate Monthly
+                </button>
+                <button class="btn btn-primary" onclick="Payments.openForm()">
+                  + Record Payment
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="stat-grid"
+              style="grid-template-columns: repeat(4, 1fr); margin-bottom: 14px"
+            >
+              <div class="stat-card gold">
+                <div class="stat-ico ico-gold">💰</div>
+                <div class="stat-val" id="payStatExpected">—</div>
+                <div class="stat-lbl">Expected</div>
+              </div>
+              <div class="stat-card green">
+                <div class="stat-ico ico-green">✅</div>
+                <div class="stat-val" id="payStatCollected">—</div>
+                <div class="stat-lbl">Collected</div>
+              </div>
+              <div class="stat-card red">
+                <div class="stat-ico ico-red">⏳</div>
+                <div class="stat-val" id="payStatPending">—</div>
+                <div class="stat-lbl">Pending</div>
+              </div>
+              <div class="stat-card purple">
+                <div class="stat-ico ico-purple">🚨</div>
+                <div class="stat-val" id="payStatOverdue">—</div>
+                <div class="stat-lbl">Overdue Count</div>
+              </div>
+            </div>
+
+            <div class="fbar">
+              <select
+                class="fc sel-building"
+                id="payBldgFilter"
+                onchange="Payments.load()"
+                style="min-width: 150px"
+              ></select>
+              <select
+                class="fc"
+                id="payStatusFilter"
+                onchange="Payments.load()"
+                style="min-width: 120px"
+              >
+                <option value="">All Status</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="overdue">Overdue</option>
+                <option value="partial">Partial</option>
+              </select>
+              <select
+                class="fc"
+                id="payMonthFilter"
+                onchange="Payments.load()"
+                style="min-width: 110px"
+              >
+                <option value="">All Months</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+              <select
+                class="fc cur-year"
+                id="payYearFilter"
+                onchange="Payments.load()"
+                style="min-width: 95px"
+              >
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+              </select>
+              <select
+                class="fc"
+                id="payTypeFilter"
+                onchange="Payments.load()"
+                style="min-width: 110px"
+              >
+                <option value="">All Types</option>
+                <option value="rent">Rent</option>
+                <option value="deposit">Deposit</option>
+                <option value="bill">Bill</option>
+                <option value="penalty">Penalty</option>
+              </select>
+            </div>
+            <div id="paymentList">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+          </section>
+
+          <!-- ══════════════════ BILLS ══════════════════ -->
+          <section class="page" id="page-bills">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Bills &amp; Expenses</h1>
+                <p>Utility bills auto-split per room/tenant</p>
+              </div>
+              <div class="pg-hdr-r">
+                <button class="btn btn-primary" onclick="Bills.openForm()">
+                  + Add Bill
+                </button>
+              </div>
+            </div>
+            <div class="fbar">
+              <select
+                class="fc sel-building"
+                id="billBldgFilter"
+                onchange="Bills.load()"
+                style="min-width: 150px"
+              ></select>
+              <select
+                class="fc"
+                id="billTypeFilter"
+                onchange="Bills.load()"
+                style="min-width: 120px"
+              >
+                <option value="">All Types</option>
+                <option value="electricity">Electricity</option>
+                <option value="water">Water</option>
+                <option value="wifi">Wi-Fi</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="other">Other</option>
+              </select>
+              <select
+                class="fc"
+                id="billMonthFilter"
+                onchange="Bills.load()"
+                style="min-width: 110px"
+              >
+                <option value="">All Months</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+              <select
+                class="fc cur-year"
+                id="billYearFilter"
+                onchange="Bills.load()"
+                style="min-width: 95px"
+              >
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+              </select>
+            </div>
+            <div id="billList">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+          </section>
+
+          <!-- ══════════════════ NOTICES ══════════════════ -->
+          <section class="page" id="page-notices">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Notices &amp; Announcements</h1>
+                <p>Post notices visible to all tenants</p>
+              </div>
+              <div class="pg-hdr-r">
+                <button class="btn btn-primary" onclick="Notices.openForm()">
+                  + Post Notice
+                </button>
+              </div>
+            </div>
+            <div class="fbar">
+              <select
+                class="fc sel-building"
+                id="noticeBldgFilter"
+                onchange="Notices.load()"
+                style="min-width: 150px"
+              ></select>
+              <select
+                class="fc"
+                id="noticeTypeFilter"
+                onchange="Notices.load()"
+                style="min-width: 130px"
+              >
+                <option value="">All Types</option>
+                <option value="general">General</option>
+                <option value="emergency">Emergency</option>
+                <option value="rule">Rule Update</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="event">Event</option>
+              </select>
+            </div>
+            <div id="noticeList">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+          </section>
+
+          <!-- ══════════════════ COMPLAINTS ══════════════════ -->
+          <section class="page" id="page-complaints">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Complaints &amp; Maintenance</h1>
+                <p>Track and resolve tenant issues</p>
+              </div>
+              <div class="pg-hdr-r">
+                <button class="btn btn-primary" onclick="Complaints.openForm()">
+                  + Add Complaint
+                </button>
+              </div>
+            </div>
+            <div class="fbar">
+              <select
+                class="fc sel-building"
+                id="complaintBldgFilter"
+                onchange="Complaints.load()"
+                style="min-width: 150px"
+              ></select>
+              <select
+                class="fc"
+                id="complaintStatusFilter"
+                onchange="Complaints.load()"
+                style="min-width: 120px"
+              >
+                <option value="">All Status</option>
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+              </select>
+              <select
+                class="fc"
+                id="complaintCatFilter"
+                onchange="Complaints.load()"
+                style="min-width: 130px"
+              >
+                <option value="">All Categories</option>
+                <option value="plumbing">Plumbing</option>
+                <option value="electrical">Electrical</option>
+                <option value="furniture">Furniture</option>
+                <option value="cleaning">Cleaning</option>
+                <option value="security">Security</option>
+                <option value="internet">Internet</option>
+                <option value="other">Other</option>
+              </select>
+              <select
+                class="fc"
+                id="complaintPriorityFilter"
+                onchange="Complaints.load()"
+                style="min-width: 115px"
+              >
+                <option value="">All Priority</option>
+                <option value="urgent">Urgent</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div id="complaintList">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+          </section>
+
+          <!-- ══════════════════ REPORTS ══════════════════ -->
+          <section class="page" id="page-reports">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Reports &amp; Analytics</h1>
+                <p>Financial and occupancy insights</p>
+              </div>
+              <div class="pg-hdr-r">
+                <select
+                  class="fc cur-year"
+                  id="rptYear"
+                  onchange="Reports.load()"
+                  style="min-width: 95px"
+                >
+                  <option value="2024">2024</option>
+                  <option value="2025">2025</option>
+                  <option value="2026">2026</option>
+                </select>
+                <select
+                  class="fc sel-building"
+                  id="rptBldgFilter"
+                  onchange="Reports.load()"
+                  style="min-width: 150px"
+                ></select>
+              </div>
+            </div>
+            <div class="tabs">
+              <button
+                class="tab-btn active"
+                onclick="Reports.switchTab('income', this)"
+              >
+                📈 Income
+              </button>
+              <button
+                class="tab-btn"
+                onclick="Reports.switchTab('expense', this)"
+              >
+                📉 Expenses
+              </button>
+              <button
+                class="tab-btn"
+                onclick="Reports.switchTab('occupancy', this)"
+              >
+                🏠 Occupancy
+              </button>
+              <button
+                class="tab-btn"
+                onclick="Reports.switchTab('profit', this)"
+              >
+                💹 Profit / Loss
+              </button>
+            </div>
+            <div id="rpt-income" class="tab-pane active">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+            <div id="rpt-expense" class="tab-pane">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+            <div id="rpt-occupancy" class="tab-pane">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+            <div id="rpt-profit" class="tab-pane">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+          </section>
+
+          <!-- ══════════════════ DOCUMENTS ══════════════════ -->
+          <section class="page" id="page-documents">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Documents</h1>
+                <p>ID proofs, agreements, receipts</p>
+              </div>
+              <div class="pg-hdr-r">
+                <button class="btn btn-primary" onclick="Documents.openForm()">
+                  + Upload Document
+                </button>
+              </div>
+            </div>
+            <div class="fbar">
+              <select
+                class="fc sel-building"
+                id="docBldgFilter"
+                onchange="Documents.load()"
+                style="min-width: 150px"
+              ></select>
+              <select
+                class="fc sel-tenant-all"
+                id="docTenantFilter"
+                onchange="Documents.load()"
+                style="min-width: 170px"
+              ></select>
+              <select
+                class="fc"
+                id="docTypeFilter"
+                onchange="Documents.load()"
+                style="min-width: 120px"
+              >
+                <option value="">All Types</option>
+                <option value="id_proof">ID Proof</option>
+                <option value="agreement">Agreement</option>
+                <option value="receipt">Receipt</option>
+                <option value="photo">Photo</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div id="documentList">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+          </section>
+
+          <!-- ══════════════════ USERS ══════════════════ -->
+          <section class="page" id="page-users">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Users &amp; Roles</h1>
+                <p>Manage system access and permissions</p>
+              </div>
+              <div class="pg-hdr-r">
+                <button class="btn btn-primary" onclick="Users.openForm()">
+                  + Add User
+                </button>
+              </div>
+            </div>
+            <div class="g2" style="margin-bottom: 16px">
+              <div class="card">
+                <div class="flex items-c gap-3">
+                  <div class="stat-ico ico-gold" style="font-size: 20px">
+                    👑
+                  </div>
+                  <div>
+                    <div class="fw-6">Owner</div>
+                    <div class="tx-sm c-muted">Full CRUD access everywhere</div>
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="flex items-c gap-3">
+                  <div class="stat-ico ico-blue" style="font-size: 20px">
+                    🧑‍💼
+                  </div>
+                  <div>
+                    <div class="fw-6">Manager</div>
+                    <div class="tx-sm c-muted">
+                      Add / edit tenants, rooms, payments
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="userList">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+          </section>
+
+          <!-- ══════════════════ SETTINGS ══════════════════ -->
+          <section class="page" id="page-settings">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Settings</h1>
+                <p>Account and profile preferences</p>
+              </div>
+            </div>
+            <div class="g2">
+              <div class="card">
+                <div class="card-hdr">
+                  <span class="card-title">Profile Settings</span>
+                </div>
+                <div class="fg">
+                  <label class="fl">Full Name</label
+                  ><input
+                    type="text"
+                    id="settingName"
+                    class="fc"
+                    placeholder="Your name"
+                  />
+                </div>
+                <div class="fg">
+                  <label class="fl">Email (read-only)</label
+                  ><input
+                    type="email"
+                    id="settingEmail"
+                    class="fc"
+                    disabled
+                    style="opacity: 0.5"
+                  />
+                </div>
+                <div class="fg">
+                  <label class="fl">Phone</label
+                  ><input
+                    type="tel"
+                    id="settingPhone"
+                    class="fc"
+                    placeholder="+91 9999999999"
+                  />
+                </div>
+                <div class="fg">
+                  <label class="fl">Role</label>
+                  <div class="fw-6 tx-sm" id="settingRoleDisplay">—</div>
+                </div>
+                <button
+                  class="btn btn-primary"
+                  id="profileSaveBtn"
+                  onclick="Settings.saveProfile()"
+                >
+                  Save Profile
+                </button>
+              </div>
+              <div class="card">
+                <div class="card-hdr">
+                  <span class="card-title">Change Password</span>
+                </div>
+                <div class="fg">
+                  <label class="fl">Current Password</label
+                  ><input
+                    type="password"
+                    id="curPwd"
+                    class="fc"
+                    placeholder="Current password"
+                  />
+                </div>
+                <div class="fg">
+                  <label class="fl">New Password</label
+                  ><input
+                    type="password"
+                    id="newPwd"
+                    class="fc"
+                    placeholder="Min 6 characters"
+                  />
+                </div>
+                <div class="fg">
+                  <label class="fl">Confirm New Password</label
+                  ><input
+                    type="password"
+                    id="cfmPwd"
+                    class="fc"
+                    placeholder="Re-enter new password"
+                  />
+                </div>
+                <button
+                  class="btn btn-sec"
+                  id="changePwdBtn"
+                  onclick="Settings.changePassword()"
+                >
+                  Update Password
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+        <!-- /content -->
+      </main>
+    </div>
+    <!-- /app -->
+
+    <!-- ══════════════════════════════ MODALS ══════════════════════════════ -->
+
+    <!-- BUILDING -->
+    <div class="mo" id="moBuilding">
+      <div class="mo-box">
+        <div class="mo-hdr">
+          <span class="mo-title" id="bldgModalTitle">Add Building</span
+          ><button class="mo-close" onclick="closeModal('moBuilding')">
+            ✕
+          </button>
+        </div>
+        <div class="mo-body">
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Name *</label
+              ><input
+                type="text"
+                id="bName"
+                class="fc"
+                placeholder="Sunrise PG – Block A"
+              />
+            </div>
+            <div class="fg">
+              <label class="fl">Type</label
+              ><select id="bType" class="fc">
+                <option value="co-ed">Co-Ed</option>
+                <option value="boys">Boys</option>
+                <option value="girls">Girls</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl">Address *</label
+            ><input
+              type="text"
+              id="bAddress"
+              class="fc"
+              placeholder="Full address"
+            />
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">City</label
+              ><input type="text" id="bCity" class="fc" placeholder="City" />
+            </div>
+            <div class="fg">
+              <label class="fl">Total Floors</label
+              ><input type="number" id="bFloors" class="fc" value="1" min="1" />
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Wi-Fi Cost/month (₹)</label
+              ><input type="number" id="bWifi" class="fc" value="0" />
+            </div>
+            <div class="fg">
+              <label class="fl">Maintenance/month (₹)</label
+              ><input type="number" id="bMaint" class="fc" value="0" />
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl">Amenities (comma-separated)</label
+            ><input
+              type="text"
+              id="bAmenities"
+              class="fc"
+              placeholder="AC, Parking, Laundry, Gym…"
+            />
+          </div>
+          <div class="fg">
+            <label class="fl">Description</label
+            ><textarea id="bDesc" class="fc"></textarea>
+          </div>
+        </div>
+        <div class="mo-foot">
+          <button class="btn btn-sec" onclick="closeModal('moBuilding')">
+            Cancel</button
+          ><button
+            class="btn btn-primary"
+            id="bldgSaveBtn"
+            onclick="Buildings.save()"
+          >
+            Save Building
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROOM -->
+    <div class="mo" id="moRoom">
+      <div class="mo-box">
+        <div class="mo-hdr">
+          <span class="mo-title" id="roomModalTitle">Add Room</span
+          ><button class="mo-close" onclick="closeModal('moRoom')">✕</button>
+        </div>
+        <div class="mo-body">
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Building *</label
+              ><select id="rBuilding" class="fc sel-building-req"></select>
+            </div>
+            <div class="fg">
+              <label class="fl">Room Number *</label
+              ><input
+                type="text"
+                id="rNumber"
+                class="fc"
+                placeholder="101 / A-201"
+              />
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Floor *</label
+              ><input type="number" id="rFloor" class="fc" value="1" min="1" />
+            </div>
+            <div class="fg">
+              <label class="fl">Type</label
+              ><select id="rType" class="fc">
+                <option value="single">Single</option>
+                <option value="double">Double</option>
+                <option value="triple">Triple</option>
+                <option value="dormitory">Dormitory</option>
+              </select>
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Total Beds *</label
+              ><input
+                type="number"
+                id="rBeds"
+                class="fc"
+                value="1"
+                min="1"
+                max="20"
+              />
+            </div>
+            <div class="fg">
+              <label class="fl">Monthly Rent (₹) *</label
+              ><input type="number" id="rRent" class="fc" placeholder="8000" />
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Status</label
+              ><select id="rStatus" class="fc">
+                <option value="available">Available</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="locked">Locked</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Needs Cleaning</label
+              ><select id="rCleaning" class="fc">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl">Amenities (comma-separated)</label
+            ><input
+              type="text"
+              id="rAmenities"
+              class="fc"
+              placeholder="AC, Attached Bath, TV…"
+            />
+          </div>
+          <div class="fg">
+            <label class="fl">Description</label
+            ><textarea id="rDesc" class="fc"></textarea>
+          </div>
+        </div>
+        <div class="mo-foot">
+          <button class="btn btn-sec" onclick="closeModal('moRoom')">
+            Cancel</button
+          ><button
+            class="btn btn-primary"
+            id="roomSaveBtn"
+            onclick="Rooms.save()"
+          >
+            Save Room
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TENANT -->
+    <div class="mo" id="moTenant">
+      <div class="mo-box mo-lg">
+        <div class="mo-hdr">
+          <span class="mo-title" id="tenantModalTitle">Add Tenant</span
+          ><button class="mo-close" onclick="closeModal('moTenant')">✕</button>
+        </div>
+        <div class="mo-body">
+          <div class="tabs">
+            <button
+              class="tab-btn active"
+              onclick="switchTab('tTab', 'tBasic', this)"
+            >
+              📋 Basic
+            </button>
+            <button
+              class="tab-btn"
+              onclick="switchTab('tTab', 'tPersonal', this)"
+            >
+              👤 Personal
+            </button>
+            <button
+              class="tab-btn"
+              onclick="switchTab('tTab', 'tEmergency', this)"
+            >
+              🆘 Emergency
+            </button>
+            <button
+              class="tab-btn"
+              onclick="switchTab('tTab', 'tStatus', this)"
+            >
+              🏷 Status &amp; ID
+            </button>
+          </div>
+          <!-- Basic -->
+          <div class="tab-pane active" id="tBasic" data-tabgroup="tTab">
+            <div class="fr">
+              <div class="fg">
+                <label class="fl">Full Name *</label
+                ><input
+                  type="text"
+                  id="tName"
+                  class="fc"
+                  placeholder="Tenant full name"
+                />
+              </div>
+              <div class="fg">
+                <label class="fl">Phone *</label
+                ><input
+                  type="tel"
+                  id="tPhone"
+                  class="fc"
+                  placeholder="+91 9999999999"
+                />
+              </div>
+            </div>
+            <div class="fr">
+              <div class="fg">
+                <label class="fl">Email</label
+                ><input type="email" id="tEmail" class="fc" />
+              </div>
+              <div class="fg">
+                <label class="fl">Alternate Phone</label
+                ><input type="tel" id="tAltPhone" class="fc" />
+              </div>
+            </div>
+            <div class="fr">
+              <div class="fg">
+                <label class="fl">Building *</label
+                ><select
+                  id="tBuilding"
+                  class="fc sel-building-req"
+                  onchange="Tenants.onBuildingChange()"
+                ></select>
+              </div>
+              <div class="fg">
+                <label class="fl">Room</label
+                ><select
+                  id="tRoom"
+                  class="fc"
+                  onchange="Tenants.onRoomChange()"
+                >
+                  <option value="">Select room</option>
+                </select>
+              </div>
+            </div>
+            <div class="fr">
+              <div class="fg">
+                <label class="fl">Bed Number</label
+                ><select id="tBed" class="fc">
+                  <option value="">Select bed</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Joining Date *</label
+                ><input type="date" id="tJoining" class="fc" />
+              </div>
+            </div>
+            <div class="fr">
+              <div class="fg">
+                <label class="fl">Monthly Rent (₹) *</label
+                ><input
+                  type="number"
+                  id="tRent"
+                  class="fc"
+                  placeholder="8000"
+                />
+              </div>
+              <div class="fg">
+                <label class="fl">Deposit Amount (₹)</label
+                ><input type="number" id="tDeposit" class="fc" value="0" />
+              </div>
+            </div>
+            <div class="fcheck">
+              <input type="checkbox" id="tDepositPaid" /><label
+                for="tDepositPaid"
+                class="tx-sm"
+                >Deposit already paid</label
+              >
+            </div>
+          </div>
+          <!-- Personal -->
+          <div class="tab-pane" id="tPersonal" data-tabgroup="tTab">
+            <div class="fr">
+              <div class="fg">
+                <label class="fl">Occupation</label
+                ><select id="tOccupation" class="fc">
+                  <option value="">Select</option>
+                  <option>Student</option>
+                  <option>Working Professional</option>
+                  <option>Self-Employed</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">College / Company</label
+                ><input type="text" id="tOrg" class="fc" />
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl">Permanent Address</label
+              ><textarea
+                id="tPermAddr"
+                class="fc"
+                style="min-height: 60px"
+              ></textarea>
+            </div>
+            <div class="fr3">
+              <div class="fg">
+                <label class="fl">City</label
+                ><input type="text" id="tCity" class="fc" />
+              </div>
+              <div class="fg">
+                <label class="fl">State</label
+                ><input type="text" id="tState" class="fc" />
+              </div>
+              <div class="fg">
+                <label class="fl">Pincode</label
+                ><input type="text" id="tPincode" class="fc" />
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl">Notes</label
+              ><textarea id="tNotes" class="fc"></textarea>
+            </div>
+          </div>
+          <!-- Emergency -->
+          <div class="tab-pane" id="tEmergency" data-tabgroup="tTab">
+            <div class="alert al-info mb-4">
+              📞 Emergency contact will be notified in urgent situations.
+            </div>
+            <div class="fr">
+              <div class="fg">
+                <label class="fl">Contact Name</label
+                ><input
+                  type="text"
+                  id="tEcName"
+                  class="fc"
+                  placeholder="Parent / Guardian name"
+                />
+              </div>
+              <div class="fg">
+                <label class="fl">Relationship</label
+                ><input
+                  type="text"
+                  id="tEcRelation"
+                  class="fc"
+                  placeholder="Father / Mother / Sibling…"
+                />
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl">Contact Phone</label
+              ><input
+                type="tel"
+                id="tEcPhone"
+                class="fc"
+                placeholder="+91 7777777777"
+              />
+            </div>
+          </div>
+          <!-- Status & ID -->
+          <div class="tab-pane" id="tStatus" data-tabgroup="tTab">
+            <div class="fr">
+              <div class="fg">
+                <label class="fl">Status</label
+                ><select id="tStatus" class="fc">
+                  <option value="active">Active</option>
+                  <option value="notice_period">Notice Period</option>
+                  <option value="vacated">Vacated</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Behavior</label
+                ><select id="tBehavior" class="fc">
+                  <option value="disciplined">Disciplined ✓</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="mischief">Mischief ⚠</option>
+                </select>
+              </div>
+            </div>
+            <div class="fr">
+              <div class="fg">
+                <label class="fl">ID Type</label
+                ><select id="tIdType" class="fc">
+                  <option value="">Select</option>
+                  <option value="aadhar">Aadhar</option>
+                  <option value="pan">PAN Card</option>
+                  <option value="passport">Passport</option>
+                  <option value="driving_license">Driving License</option>
+                  <option value="voter_id">Voter ID</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">ID Number</label
+                ><input type="text" id="tIdNumber" class="fc" />
+              </div>
+            </div>
+            <div class="fcheck">
+              <input type="checkbox" id="tIdVerified" /><label
+                for="tIdVerified"
+                class="tx-sm fw-6 c-green"
+                >✓ ID Verified</label
+              >
+            </div>
+          </div>
+        </div>
+        <div class="mo-foot">
+          <button class="btn btn-sec" onclick="closeModal('moTenant')">
+            Cancel</button
+          ><button
+            class="btn btn-primary"
+            id="tenantSaveBtn"
+            onclick="Tenants.save()"
+          >
+            Save Tenant
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TENANT PROFILE VIEW -->
+    <div class="mo" id="moTenantProfile">
+      <div class="mo-box mo-xl">
+        <div class="mo-hdr">
+          <span class="mo-title">Tenant Profile</span
+          ><button class="mo-close" onclick="closeModal('moTenantProfile')">
+            ✕
+          </button>
+        </div>
+        <div class="mo-body" id="tenantProfileContent">
+          <div class="spin-wrap"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAYMENT -->
+    <div class="mo" id="moPayment">
+      <div class="mo-box">
+        <div class="mo-hdr">
+          <span class="mo-title" id="payModalTitle">Record Payment</span
+          ><button class="mo-close" onclick="closeModal('moPayment')">✕</button>
+        </div>
+        <div class="mo-body">
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Tenant *</label
+              ><select id="pTenant" class="fc sel-tenant"></select>
+            </div>
+            <div class="fg">
+              <label class="fl">Building</label
+              ><select id="pBuilding" class="fc sel-building-req"></select>
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Amount (₹) *</label
+              ><input
+                type="number"
+                id="pAmount"
+                class="fc"
+                placeholder="8000"
+              />
+            </div>
+            <div class="fg">
+              <label class="fl">Payment Type</label
+              ><select id="pType" class="fc">
+                <option value="rent">Rent</option>
+                <option value="deposit">Deposit</option>
+                <option value="deposit_refund">Deposit Refund</option>
+                <option value="bill">Bill</option>
+                <option value="penalty">Penalty</option>
+                <option value="advance">Advance</option>
+              </select>
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Month</label
+              ><select id="pMonth" class="fc">
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Year</label
+              ><input type="number" id="pYear" class="fc" value="2025" />
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Payment Method</label
+              ><select id="pMethod" class="fc">
+                <option value="cash">Cash</option>
+                <option value="upi">UPI</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="cheque">Cheque</option>
+                <option value="online">Online</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Status</label
+              ><select id="pStatus" class="fc">
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="partial">Partial</option>
+              </select>
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Paid On</label
+              ><input type="date" id="pPaidOn" class="fc" />
+            </div>
+            <div class="fg">
+              <label class="fl">Due Date</label
+              ><input type="date" id="pDueDate" class="fc" />
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl">Transaction ID / Reference</label
+            ><input
+              type="text"
+              id="pTxnId"
+              class="fc"
+              placeholder="UPI ref / cheque no…"
+            />
+          </div>
+          <div class="fg">
+            <label class="fl">Notes</label
+            ><textarea id="pNotes" class="fc"></textarea>
+          </div>
+        </div>
+        <div class="mo-foot">
+          <button class="btn btn-sec" onclick="closeModal('moPayment')">
+            Cancel</button
+          ><button
+            class="btn btn-primary"
+            id="paySaveBtn"
+            onclick="Payments.save()"
+          >
+            Save Payment
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BILL -->
+    <div class="mo" id="moBill">
+      <div class="mo-box">
+        <div class="mo-hdr">
+          <span class="mo-title">Add Bill / Expense</span
+          ><button class="mo-close" onclick="closeModal('moBill')">✕</button>
+        </div>
+        <div class="mo-body">
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Building *</label
+              ><select id="billBldg" class="fc sel-building-req"></select>
+            </div>
+            <div class="fg">
+              <label class="fl">Bill Type *</label
+              ><select id="billType" class="fc">
+                <option value="electricity">⚡ Electricity</option>
+                <option value="water">💧 Water</option>
+                <option value="wifi">📶 Wi-Fi</option>
+                <option value="maintenance">🔧 Maintenance</option>
+                <option value="other">📄 Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Month *</label
+              ><select id="billMonth" class="fc">
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Year *</label
+              ><input type="number" id="billYear" class="fc" value="2025" />
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Total Amount (₹) *</label
+              ><input
+                type="number"
+                id="billAmount"
+                class="fc"
+                placeholder="5000"
+              />
+            </div>
+            <div class="fg">
+              <label class="fl">Split Method</label
+              ><select id="billSplit" class="fc">
+                <option value="equal">Equal per Tenant</option>
+                <option value="per_room">Per Room</option>
+                <option value="per_tenant">Per Tenant (active)</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl">Description / Notes</label
+            ><textarea
+              id="billDesc"
+              class="fc"
+              placeholder="Bill details, meter reading…"
+            ></textarea>
+          </div>
+        </div>
+        <div class="mo-foot">
+          <button class="btn btn-sec" onclick="closeModal('moBill')">
+            Cancel</button
+          ><button
+            class="btn btn-primary"
+            id="billSaveBtn"
+            onclick="Bills.save()"
+          >
+            Add &amp; Split Bill
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLAINT -->
+    <div class="mo" id="moComplaint">
+      <div class="mo-box">
+        <div class="mo-hdr">
+          <span class="mo-title">Add Complaint / Request</span
+          ><button class="mo-close" onclick="closeModal('moComplaint')">
+            ✕
+          </button>
+        </div>
+        <div class="mo-body">
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Building</label
+              ><select id="cBuilding" class="fc sel-building-req"></select>
+            </div>
+            <div class="fg">
+              <label class="fl">Tenant (optional)</label
+              ><select id="cTenant" class="fc sel-tenant"></select>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl">Title *</label
+            ><input
+              type="text"
+              id="cTitle"
+              class="fc"
+              placeholder="Brief complaint title"
+            />
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Category</label
+              ><select id="cCategory" class="fc">
+                <option value="plumbing">🔩 Plumbing</option>
+                <option value="electrical">⚡ Electrical</option>
+                <option value="furniture">🪑 Furniture</option>
+                <option value="cleaning">🧹 Cleaning</option>
+                <option value="security">🔐 Security</option>
+                <option value="internet">📶 Internet</option>
+                <option value="other">📋 Other</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Priority</label
+              ><select id="cPriority" class="fc">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">🚨 Urgent</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl">Description *</label
+            ><textarea
+              id="cDesc"
+              class="fc"
+              placeholder="Detailed description"
+            ></textarea>
+          </div>
+          <div class="fg">
+            <label class="fl">Assigned To (staff)</label
+            ><input
+              type="text"
+              id="cAssigned"
+              class="fc"
+              placeholder="Name of person handling this"
+            />
+          </div>
+        </div>
+        <div class="mo-foot">
+          <button class="btn btn-sec" onclick="closeModal('moComplaint')">
+            Cancel</button
+          ><button
+            class="btn btn-primary"
+            id="complaintSaveBtn"
+            onclick="Complaints.save()"
+          >
+            Submit
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLAINT STATUS UPDATE -->
+    <div class="mo" id="moComplaintStatus">
+      <div class="mo-box mo-sm">
+        <div class="mo-hdr">
+          <span class="mo-title">Update Status</span
+          ><button class="mo-close" onclick="closeModal('moComplaintStatus')">
+            ✕
+          </button>
+        </div>
+        <div class="mo-body">
+          <input type="hidden" id="csId" />
+          <div class="fg">
+            <label class="fl">New Status</label
+            ><select id="csStatus" class="fc">
+              <option value="open">Open</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl">Assigned To</label
+            ><input type="text" id="csAssigned" class="fc" />
+          </div>
+          <div class="fg">
+            <label class="fl">Update Note</label
+            ><textarea id="csNote" class="fc"></textarea>
+          </div>
+          <div class="fg">
+            <label class="fl">Resolution (if resolved)</label
+            ><textarea id="csResolution" class="fc"></textarea>
+          </div>
+        </div>
+        <div class="mo-foot">
+          <button class="btn btn-sec" onclick="closeModal('moComplaintStatus')">
+            Cancel</button
+          ><button class="btn btn-primary" onclick="Complaints.updateStatus()">
+            Update
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTICE -->
+    <div class="mo" id="moNotice">
+      <div class="mo-box">
+        <div class="mo-hdr">
+          <span class="mo-title">Post Notice / Announcement</span
+          ><button class="mo-close" onclick="closeModal('moNotice')">✕</button>
+        </div>
+        <div class="mo-body">
+          <div class="fg">
+            <label class="fl">Title *</label
+            ><input
+              type="text"
+              id="nTitle"
+              class="fc"
+              placeholder="Notice heading"
+            />
+          </div>
+          <div class="fg">
+            <label class="fl">Content *</label
+            ><textarea
+              id="nContent"
+              class="fc"
+              style="min-height: 100px"
+              placeholder="Full notice content…"
+            ></textarea>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Type</label
+              ><select id="nType" class="fc">
+                <option value="general">General</option>
+                <option value="emergency">Emergency</option>
+                <option value="rule">Rule Update</option>
+                <option value="event">Event</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Priority</label
+              ><select id="nPriority" class="fc">
+                <option value="normal">Normal</option>
+                <option value="important">Important</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">For Building (blank = all)</label
+              ><select id="nBuilding" class="fc sel-building"></select>
+            </div>
+            <div class="fg">
+              <label class="fl">Expires On</label
+              ><input type="date" id="nExpiry" class="fc" />
+            </div>
+          </div>
+        </div>
+        <div class="mo-foot">
+          <button class="btn btn-sec" onclick="closeModal('moNotice')">
+            Cancel</button
+          ><button
+            class="btn btn-primary"
+            id="noticeSaveBtn"
+            onclick="Notices.save()"
+          >
+            Post Notice
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- USER -->
+    <div class="mo" id="moUser">
+      <div class="mo-box mo-sm">
+        <div class="mo-hdr">
+          <span class="mo-title" id="userModalTitle">Add User</span
+          ><button class="mo-close" onclick="closeModal('moUser')">✕</button>
+        </div>
+        <div class="mo-body">
+          <form id="userForm">
+            <div class="fr">
+              <div class="fg">
+                <label class="fl">Full Name *</label
+                ><input type="text" id="uName" class="fc" />
+              </div>
+              <div class="fg">
+                <label class="fl">Phone</label
+                ><input type="tel" id="uPhone" class="fc" />
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl">Email *</label
+              ><input type="email" id="uEmail" class="fc" />
+            </div>
+            <div class="fg">
+              <label class="fl">Role *</label
+              ><select id="uRole" class="fc">
+                <option value="manager">Manager</option>
+                <option value="owner">Owner</option>
+              </select>
+            </div>
+            <div id="userPwdGroup">
+              <div class="fg">
+                <label class="fl">Password *</label
+                ><input
+                  type="password"
+                  id="uPassword"
+                  class="fc"
+                  placeholder="Min 6 characters"
+                />
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="mo-foot">
+          <button class="btn btn-sec" onclick="closeModal('moUser')">
+            Cancel</button
+          ><button
+            class="btn btn-primary"
+            id="userSaveBtn"
+            onclick="Users.save()"
+          >
+            Save User
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCUMENT UPLOAD -->
+    <div class="mo" id="moDocument">
+      <div class="mo-box">
+        <div class="mo-hdr">
+          <span class="mo-title">Upload Document</span
+          ><button class="mo-close" onclick="closeModal('moDocument')">
+            ✕
+          </button>
+        </div>
+        <div class="mo-body">
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Document Name *</label
+              ><input
+                type="text"
+                id="docFormName"
+                class="fc"
+                placeholder="e.g. Aadhar Card"
+              />
+            </div>
+            <div class="fg">
+              <label class="fl">Type</label
+              ><select id="docFormType" class="fc">
+                <option value="id_proof">ID Proof</option>
+                <option value="agreement">Agreement</option>
+                <option value="receipt">Receipt</option>
+                <option value="photo">Photo</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Building</label
+              ><select
+                id="docFormBuilding"
+                class="fc sel-building-req"
+              ></select>
+            </div>
+            <div class="fg">
+              <label class="fl">Tenant (optional)</label
+              ><select id="docFormTenant" class="fc sel-tenant"></select>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl">Select File</label>
+            <input
+              type="file"
+              id="docFile"
+              class="fc"
+              accept="image/*,.pdf,.doc,.docx"
+              onchange="Documents.previewFile()"
+            />
+            <div class="fhint">Images, PDF, Word — max 5 MB</div>
+          </div>
+          <div id="docPreview" class="hidden"></div>
+        </div>
+        <div class="mo-foot">
+          <button class="btn btn-sec" onclick="closeModal('moDocument')">
+            Cancel</button
+          ><button
+            class="btn btn-primary"
+            id="docSaveBtn"
+            onclick="Documents.save()"
+          >
+            Upload
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-wrap" id="toastWrap"></div>
+
+    <!-- ════════════════════════════ SCRIPTS ════════════════════════════ -->
+    <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/store.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/nav.js"></script>
+    <script src="/js/pages/dashboard.js"></script>
+    <script src="/js/pages/buildings.js"></script>
+    <script src="/js/pages/rooms.js"></script>
+    <script src="/js/pages/tenants.js"></script>
+    <script src="/js/pages/payments.js"></script>
+    <script src="/js/pages/bills.js"></script>
+    <script src="/js/pages/complaints.js"></script>
+    <script src="/js/pages/notices.js"></script>
+    <script src="/js/pages/reports.js"></script>
+    <script src="/js/pages/documents.js"></script>
+    <script src="/js/pages/users.js"></script>
+    <script src="/js/pages/vacate.js"></script>
+    <script src="/js/pages/settings.js"></script>
+    <script src="/js/main.js"></script>
+  </body>
+</html>

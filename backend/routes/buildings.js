@@ -1,0 +1,12 @@
+const router = require("express").Router();
+const ctrl = require("../controllers/buildingController");
+const auth = require("../middleware/auth");
+const role = require("../middleware/roleCheck");
+
+router.get("/", auth, ctrl.list);
+router.post("/", auth, ctrl.create);
+router.get("/:id", auth, ctrl.get);
+router.put("/:id", auth, ctrl.update);
+router.delete("/:id", auth, role("owner"), ctrl.remove);
+
+module.exports = router;
