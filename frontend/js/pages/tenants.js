@@ -145,6 +145,8 @@ const Tenants = {
     el("tenantForm")?.reset();
     setVal("tJoining", new Date().toISOString().split("T")[0]);
     await Store.fillBuildingsRequired("#tBuilding");
+
+     
     if (id) {
       try {
         const t = await Api.tenants.get(id);
@@ -179,7 +181,16 @@ const Tenants = {
         setVal("tBed", t.bedNumber);
       } catch (err) {
         return toast(err.message, "err");
-      }
+    }
+    } else {
+      // 🛑 FIX: Force clean defaults for new tenants so they don't inherit "vacated"
+      setVal("tStatus", "active");
+      setVal("tBehavior", "moderate");
+      setVal("tIdType", "");
+      setChecked("tIdVerified", false);
+      setChecked("tDepositPaid", false);
+      setHtml("tRoom", '<option value="">Select Room</option>');
+      setHtml("tBed", '<option value="">Select Bed</option>');
     }
     openModal("moTenant");
   },
