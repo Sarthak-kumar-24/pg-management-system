@@ -36,11 +36,11 @@ const paymentSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-paymentSchema.pre("save", function (next) {
+paymentSchema.pre("save", function () {
   if (this.isNew && !this.receiptNumber) {
     this.receiptNumber = "RCP" + Date.now().toString().slice(-8);
   }
-  next();
+  
 });
 
 module.exports = mongoose.model("Payment", paymentSchema);
