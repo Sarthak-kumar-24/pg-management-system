@@ -65,9 +65,14 @@ exports.get = async (req, res) => {
 };
 
 // ── POST /api/tenants ──────────────────────────────────────────────────────
-exports.create = async (req, res) => {
+exports.create = async (req, res, next) => {
   try {
-    const tenant = await Tenant.create(req.body);
+    const data = { ...req.body };
+    if (data.status === "") delete data.status;
+    if (data.behavior === "") delete data.behavior;
+    if (data.idType === "") delete data.idType;
+    
+    const tenant = await Tenant.create(data);
 
     // Assign bed in room
     if (tenant.room && tenant.bedNumber) {
@@ -94,16 +99,22 @@ exports.create = async (req, res) => {
     await tenant.populate("room", "roomNumber floor");
     res.status(201).json(tenant);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    //res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // ── PUT /api/tenants/:id ───────────────────────────────────────────────────
-exports.update = async (req, res) => {
+exports.update = async (req, res, next) => {
   try {
     const old = await Tenant.findById(req.params.id);
     if (!old) return res.status(404).json({ error: "Tenant not found" });
 
+    const data = { ...req.body };
+    if (data.status === "") delete data.status;
+    if (data.behavior === "") delete data.behavior;
+    if (data.idType === "") delete data.idType;
+    
     // If room/bed changed, free old and assign new
     const newRoom = req.body.room;
     const newBed = req.body.bedNumber;
@@ -115,6 +126,15 @@ exports.update = async (req, res) => {
       await assignBed(newRoom, newBed, old._id);
     }
 
+    // 🛑 FIX: If you mark them as vacated via the Edit form, force-free their bed!
+    if (data.status === "vacated" && old.status !== "vacated") {
+      if (oldRoom && oldBed) {
+        await freeBed(oldRoom, oldBed);
+      }
+      data.room = null; 
+      data.bedNumber = null;
+    }
+
     const tenant = await Tenant.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -123,7 +143,8 @@ exports.update = async (req, res) => {
       .populate("room", "roomNumber floor");
     res.json(tenant);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    //res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
