@@ -44,7 +44,7 @@ const roomSchema = new mongoose.Schema(
 );
 
 // Auto-initialise beds when room is created or totalBeds changes
-roomSchema.pre("save", function (next) {
+roomSchema.pre("save", function () {
   if (this.isNew || this.isModified("totalBeds")) {
     const existing = this.beds.length;
     for (let i = existing + 1; i <= this.totalBeds; i++) {
@@ -55,7 +55,7 @@ roomSchema.pre("save", function (next) {
       this.beds = this.beds.slice(0, this.totalBeds);
     }
   }
-  next();
+  //next();
 });
 
 module.exports = mongoose.model("Room", roomSchema);
