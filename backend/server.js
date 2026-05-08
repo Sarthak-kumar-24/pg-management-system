@@ -39,6 +39,15 @@ app.get("/login", (req, res) =>
 app.get(/.*/, (req, res) =>
   res.sendFile(path.join(frontendPath, "index.html")),
 );
+// 🛑 GLOBAL ERROR HANDLER (Must be placed AFTER all routes)
+app.use((err, req, res, next) => {
+  console.error("Backend Error:", err.message); // Logs to Render terminal
+  
+  // Force Express to send the error as a JSON object, not HTML!
+  res.status(err.status || 500).json({ 
+    error: err.message || "Internal Server Error" 
+  });
+});
 
 // ── Start ────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
