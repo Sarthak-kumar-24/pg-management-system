@@ -1,7 +1,7 @@
 const Room = require("../models/Room");
 
 // GET /api/rooms
-exports.list = async (req, res) => {
+exports.list = async (req, res, next) => {
   try {
     const filter = {};
     if (req.query.building) filter.building = req.query.building;
@@ -13,12 +13,13 @@ exports.list = async (req, res) => {
       .sort({ floor: 1, roomNumber: 1 });
     res.json(rooms);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+   // res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // GET /api/rooms/:id
-exports.get = async (req, res) => {
+exports.get = async (req, res, next) => {
   try {
     const room = await Room.findById(req.params.id)
       .populate("building", "name address")
@@ -29,23 +30,25 @@ exports.get = async (req, res) => {
     if (!room) return res.status(404).json({ error: "Room not found" });
     res.json(room);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    //res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // POST /api/rooms
-exports.create = async (req, res) => {
+exports.create = async (req, res, next) => {
   try {
     const room = await Room.create(req.body);
     await room.populate("building", "name");
     res.status(201).json(room);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    //res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // PUT /api/rooms/:id
-exports.update = async (req, res) => {
+exports.update = async (req, res, next) => {
   try {
     const room = await Room.findById(req.params.id);
     if (!room) return res.status(404).json({ error: "Room not found" });
@@ -55,22 +58,24 @@ exports.update = async (req, res) => {
     await room.populate("building", "name");
     res.json(room);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    //res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // DELETE /api/rooms/:id
-exports.remove = async (req, res) => {
+exports.remove = async (req, res,next) => {
   try {
     await Room.findByIdAndDelete(req.params.id);
     res.json({ message: "Room deleted" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+   // res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // PATCH /api/rooms/:id/cleaning  — toggle
-exports.toggleCleaning = async (req, res) => {
+exports.toggleCleaning = async (req, res, next) => {
   try {
     const room = await Room.findById(req.params.id);
     if (!room) return res.status(404).json({ error: "Room not found" });
@@ -78,7 +83,8 @@ exports.toggleCleaning = async (req, res) => {
     await room.save();
     res.json({ needsCleaning: room.needsCleaning });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+   // res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
