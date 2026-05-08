@@ -38,7 +38,13 @@ exports.get = async (req, res, next) => {
 // POST /api/rooms
 exports.create = async (req, res, next) => {
   try {
-    const room = await Room.create(req.body);
+    const data = { ...req.body };
+    
+    // 2. 🛑 FIX: Delete empty strings so Mongoose uses defaults
+    if (data.status === "") delete data.status;
+    if (data.type === "") delete data.type;
+    
+    const room = await Room.create(data);
     await room.populate("building", "name");
     res.status(201).json(room);
   } catch (err) {
@@ -52,7 +58,14 @@ exports.update = async (req, res, next) => {
   try {
     const room = await Room.findById(req.params.id);
     if (!room) return res.status(404).json({ error: "Room not found" });
-    const { beds, ...rest } = req.body; // don't overwrite bed assignments via general update
+    // 1. Make a copy of the incoming data
+    const data = { ...req.body };
+    
+    // 2. 🛑 FIX: Delete empty strings
+    if (data.status === "") delete data.status;
+    if (data.type === "") delete data.type;
+    
+    const { beds, ...rest } = data; // don't overwrite bed assignments via general update
     Object.assign(room, rest);
     await room.save();
     await room.populate("building", "name");
