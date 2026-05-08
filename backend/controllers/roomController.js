@@ -89,7 +89,7 @@ exports.toggleCleaning = async (req, res, next) => {
 };
 
 // GET /api/rooms/vacant/beds  — list all vacant beds for assignment
-exports.vacantBeds = async (req, res) => {
+exports.vacantBeds = async (req, res, next) => {
   try {
     const filter = {};
     if (req.query.building) filter.building = req.query.building;
@@ -115,6 +115,7 @@ exports.vacantBeds = async (req, res) => {
     });
     res.json(list);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    //res.status(500).json({ error: err.message });
+    next(err);
   }
 };
