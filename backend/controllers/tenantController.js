@@ -12,6 +12,8 @@ async function assignBed(roomId, bedNumber, tenantId) {
     bed.isOccupied = true;
   }
   room.status = room.beds.every((b) => b.isOccupied) ? "occupied" : "available";
+ // Forces Mongoose to recognize the array change
+  room.markModified("beds");
   await room.save();
 }
 
@@ -24,6 +26,8 @@ async function freeBed(roomId, bedNumber) {
     bed.isOccupied = false;
   }
   room.status = room.beds.some((b) => b.isOccupied) ? "available" : "available";
+
+  room.markModified("beds");
   await room.save();
 }
 
@@ -116,15 +120,19 @@ exports.update = async (req, res, next) => {
     if (data.idType === "") delete data.idType;
     
     // If room/bed changed, free old and assign new
-    const newRoom = req.body.room;
-    const newBed = req.body.bedNumber;
+    //const newRoom = req.body.room;
+    //const newBed = req.body.bedNumber;
+    const newRoom = data.room; 
+    const newBed = data.bedNumber;
     const oldRoom = old.room?.toString();
     const oldBed = old.bedNumber;
 
-    if (newRoom && (newRoom !== oldRoom || newBed !== oldBed)) {
+    const isReturning = data.status === "active" && old.status === "vacated";
+
+    if ((newRoom && (newRoom !== oldRoom || newBed !== oldBed)) || (isReturning && newRoom && newBed)) {
       if (oldRoom && oldBed) await freeBed(oldRoom, oldBed);
       await assignBed(newRoom, newBed, old._id);
-    }
+     }
 
     // 🛑 FIX: If you mark them as vacated via the Edit form, force-free their bed!
     if (data.status === "vacated" && old.status !== "vacated") {
@@ -135,7 +143,8 @@ exports.update = async (req, res, next) => {
       data.bedNumber = null;
     }
 
-    const tenant = await Tenant.findByIdAndUpdate(req.params.id, req.body, {
+   // const tenant = await Tenant.findByIdAndUpdate(req.params.id, req.body, {
+    const tenant = await Tenant.findByIdAndUpdate(req.params.id, data, {
       new: true,
       runValidators: true,
     })
