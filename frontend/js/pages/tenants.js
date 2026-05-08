@@ -268,6 +268,11 @@ const Tenants = {
         "Name, phone, building, rent, joining date required",
         "warn",
       );
+     Object.keys(data).forEach((key) => {
+      if (data[key] === "") {
+        delete data[key];
+      }
+    });
     try {
       setBusy("tenantSaveBtn", true);
       if (this.editId) await Api.tenants.update(this.editId, data);
