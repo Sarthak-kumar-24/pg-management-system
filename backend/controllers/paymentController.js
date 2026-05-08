@@ -2,7 +2,7 @@ const Payment = require("../models/Payment");
 const Tenant = require("../models/Tenant");
 
 // GET /api/payments
-exports.list = async (req, res) => {
+exports.list = async (req, res, next) => {
   try {
     const filter = {};
     if (req.query.tenant) filter.tenant = req.query.tenant;
@@ -19,12 +19,13 @@ exports.list = async (req, res) => {
       .sort({ year: -1, month: -1, createdAt: -1 });
     res.json(payments);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    //res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // GET /api/payments/:id
-exports.get = async (req, res) => {
+exports.get = async (req, res, next) => {
   try {
     const p = await Payment.findById(req.params.id)
       .populate("tenant", "name phone building room")
@@ -33,27 +34,41 @@ exports.get = async (req, res) => {
     if (!p) return res.status(404).json({ error: "Payment not found" });
     res.json(p);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+   // res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // POST /api/payments
-exports.create = async (req, res) => {
+exports.create = async (req, res, next) => {
   try {
-    const payment = await Payment.create(req.body);
+    const data = { ...req.body };
+    if (data.type === "") delete data.type;
+    if (data.status === "") delete data.status;
+    if (data.paymentMethod === "") delete data.paymentMethod;
+    
+    const payment = await Payment.create(data);
     await payment.populate("tenant", "name phone");
     await payment.populate("building", "name");
     await payment.populate("room", "roomNumber");
     res.status(201).json(payment);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+   // res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // PUT /api/payments/:id
-exports.update = async (req, res) => {
+exports.update = async (req, res, next) => {
   try {
-    const payment = await Payment.findByIdAndUpdate(req.params.id, req.body, {
+
+    // 🛑 BULLETPROOF FIX: Clean empty strings
+    const data = { ...req.body };
+    if (data.type === "") delete data.type;
+    if (data.status === "") delete data.status;
+    if (data.paymentMethod === "") delete data.paymentMethod;
+    
+    const payment = await Payment.findByIdAndUpdate(req.params.id, data, {
       new: true,
       runValidators: true,
     })
@@ -63,22 +78,24 @@ exports.update = async (req, res) => {
     if (!payment) return res.status(404).json({ error: "Payment not found" });
     res.json(payment);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    //res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // DELETE /api/payments/:id
-exports.remove = async (req, res) => {
+exports.remove = async (req, res, next) => {
   try {
     await Payment.findByIdAndDelete(req.params.id);
     res.json({ message: "Payment deleted" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    //res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // POST /api/payments/generate-monthly — bulk generate rent records
-exports.generateMonthly = async (req, res) => {
+exports.generateMonthly = async (req, res, next) => {
   try {
     const { month, year, buildingId } = req.body;
     if (!month || !year)
@@ -114,12 +131,13 @@ exports.generateMonthly = async (req, res) => {
       count: created.length,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    //res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
 // GET /api/payments/stats/summary
-exports.stats = async (req, res) => {
+exports.stats = async (req, res, next) => {
   try {
     const now = new Date();
     const month = Number(req.query.month) || now.getMonth() + 1;
@@ -144,6 +162,7 @@ exports.stats = async (req, res) => {
       year,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+   // res.status(500).json({ error: err.message });
+    next(err);
   }
 };
