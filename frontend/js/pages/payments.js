@@ -238,11 +238,14 @@ const Payments = {
 
     try {
       setBusy("elecSaveBtn", true);
+      const token = localStorage.getItem("token");
       // Ensure you add this route to your Api object (e.g. Api.payments.addElectricity)
       // Or make a raw fetch call:
       const res = await fetch("/api/payments/electricity", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+                 "Authorization": `Bearer ${token}`
+                 },
         body: JSON.stringify(data)
       });
       const result = await res.json();
