@@ -12,13 +12,17 @@ exports.list = async (req, res, next) => {
     if (req.query.type) filter.type = req.query.type;
     if (req.query.month) filter.month = Number(req.query.month);
     if (req.query.year) filter.year = Number(req.query.year);
+    
     const payments = await Payment.find(filter)
       .populate("tenant", "name phone")
       .populate("building", "name")
       .populate("room", "roomNumber floor")
-      .sort({ year: -1, month: -1, createdAt: -1 });
-    res.json(payments);
-  } catch (err) {
+      .sort({ year: -1, month: -1, createdAt: -1 })
+      .limit(100)
+      .lean();
+       res.json(payments);
+    
+   } catch (err) {
     //res.status(500).json({ error: err.message });
     next(err);
   }
@@ -140,11 +144,17 @@ exports.generateMonthly = async (req, res, next) => {
 exports.stats = async (req, res, next) => {
   try {
     const now = new Date();
-    const month = Number(req.query.month) || now.getMonth() + 1;
+   // const month = Number(req.query.month) || now.getMonth() + 1;
     const year = Number(req.query.year) || now.getFullYear();
-    const filter = { type: "rent", month, year };
+    //const filter = { type: "rent", month, year };
+
+    const filter = { type: "rent", year };
+
+    if (req.query.month) filter.month = Number(req.query.month);
     if (req.query.building) filter.building = req.query.building;
-    const payments = await Payment.find(filter);
+    //const payments = await Payment.find(filter);
+    const payments = await Payment.find(filter).lean();
+    /*
     const totalExpected = payments.reduce((s, p) => s + p.amount, 0);
     const totalCollected = payments
       .filter((p) => p.status === "paid")
@@ -153,12 +163,33 @@ exports.stats = async (req, res, next) => {
       .filter((p) => p.status !== "paid")
       .reduce((s, p) => s + p.amount, 0);
     const overdueCount = payments.filter((p) => p.status === "overdue").length;
+    */
+    let totalExpected = 0;
+    let totalCollected = 0;
+    let totalPending = 0;
+    let overdueCount = 0;
+
+    for (const p of payments) {
+      totalExpected += p.amount;
+      
+      if (p.status === "paid") {
+        totalCollected += p.amount;
+      } else {
+        totalPending += p.amount;
+      }
+      
+      if (p.status === "overdue") {
+        overdueCount++;
+      }
+    }
+    
     res.json({
       totalExpected,
       totalCollected,
       totalPending,
       overdueCount,
-      month,
+      //month,
+      month: req.query.month || "All",
       year,
     });
   } catch (err) {
