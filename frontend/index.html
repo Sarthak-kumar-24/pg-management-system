@@ -38,6 +38,9 @@
           <span class="sb-item" data-page="rooms" onclick="Nav.go('rooms')"
             ><span class="sb-ico">🚪</span>Rooms &amp; Beds</span
           >
+          <span class="sb-item" data-page="qrs" onclick="Nav.go('qrs')">
+            <span class="sb-ico">🔳</span>Room QRs
+          </span>
 
           <span class="sb-grp-lbl">Tenants</span>
           <span class="sb-item" data-page="tenants" onclick="Nav.go('tenants')"
@@ -321,6 +324,11 @@
                 <option value="3">Floor 3</option>
                 <option value="4">Floor 4</option>
                 <option value="5">Floor 5</option>
+                <option value="5">Floor 6</option>
+                <option value="5">Floor 7</option>
+                <option value="5">Floor 8</option>
+                <option value="5">Floor 9</option>
+                <option value="5">Floor 10</option>
               </select>
               <select
                 class="fc"
@@ -338,6 +346,12 @@
               <div class="spin-wrap"><div class="spinner"></div></div>
             </div>
           </section>
+          <div id="page-qrs" class="page">
+             <div class="pg-hdr">
+               <div class="pg-hdr-l">
+                 <h1>Room QR Codes</h1>
+                 </div>
+          </div>
 
           <!-- ══════════════════ TENANTS ══════════════════ -->
           <section class="page" id="page-tenants">
@@ -1269,6 +1283,13 @@
         </div>
       </div>
     </div>
+    <div id="moPrintQr" class="mo">
+      <div class="mo-box mo-sm">
+        <div class="mo-hdr">
+          <div class="mo-title">Print Room QR</div>
+          </div>
+      </div>
+    </div>
 
     <!-- TENANT -->
     <div class="mo" id="moTenant">
@@ -2149,6 +2170,7 @@
     <script src="/js/pages/users.js"></script>
     <script src="/js/pages/vacate.js"></script>
     <script src="/js/pages/settings.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="/js/main.js"></script>
   </body>
 </html>
