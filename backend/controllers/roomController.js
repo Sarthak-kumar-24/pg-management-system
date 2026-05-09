@@ -64,6 +64,18 @@ exports.update = async (req, res, next) => {
     // 2. 🛑 FIX: Delete empty strings
     if (data.status === "") delete data.status;
     if (data.type === "") delete data.type;
+    const occupiedCount = room.beds.filter(b => b.isOccupied).length;
+    
+    // New Rules: 1 bed -> max 2, 2 bed -> max 3, 3 bed -> max 4/5
+    // We can generalize this as: Max Allowed = Total Beds + 1
+    const totalBeds = data.totalBeds || room.totalBeds;
+    const maxAllowed = totalBeds + 1; 
+
+    if (occupiedCount > maxAllowed) {
+      return res.status(400).json({ 
+        error: `Over-occupancy limit reached. For a ${totalBeds} bed room, max ${maxAllowed} tenants are allowed.` 
+      });
+    }
     
     const { beds, ...rest } = data; // don't overwrite bed assignments via general update
     Object.assign(room, rest);
