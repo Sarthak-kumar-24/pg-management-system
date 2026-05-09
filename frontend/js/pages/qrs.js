@@ -73,7 +73,7 @@ const Qrs = {
 
     openModal("moPrintQr");
   },
-
+/*
   print() {
     // Open a simple print window with just the QR code
     const title = document.getElementById("qrPrintTitle").innerText;
@@ -103,7 +103,58 @@ const Qrs = {
     `);
     printWindow.document.close();
   }
+  */
+
+   print() {
+    const title = document.getElementById("qrPrintTitle").innerText;
+    
+    // 1. Reliably grab the QR code image data
+    const canvas = document.querySelector("#qrcodeDisplay canvas");
+    const img = document.querySelector("#qrcodeDisplay img");
+    
+    let qrSrc = "";
+    if (canvas) {
+      qrSrc = canvas.toDataURL("image/png"); // Extract safely from canvas
+    } else if (img && img.src) {
+      qrSrc = img.src; // Fallback to image tag
+    }
+
+    if (!qrSrc) {
+      toast("QR Code is still generating, please wait a second.", "warn");
+      return;
+    }
+
+    // 2. Open the window (and catch pop-up blockers!)
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert("⚠️ Your browser blocked the print window. Please allow pop-ups for this site!");
+      return;
+    }
+
+    // 3. Write the print-friendly HTML
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print QR - ${title}</title>
+          <style>
+            body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+            h1 { font-size: 32px; margin-bottom: 10px; }
+            p { color: #555; margin-bottom: 40px; font-size: 18px; }
+            img { width: 300px; height: 300px; padding: 20px; border: 3px dashed #ccc; border-radius: 12px; }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <p>Scan to register and upload your documents</p>
+          <img src="${qrSrc}" onload="window.print(); window.close();" />
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+  }
 };
+
 
 
 
