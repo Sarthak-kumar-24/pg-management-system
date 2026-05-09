@@ -12,7 +12,7 @@ const paymentSchema = new mongoose.Schema(
     amount: { type: Number, required: true, min: 0 },
     type: {
       type: String,
-      enum: ["rent", "deposit", "deposit_refund", "bill", "penalty", "advance"],
+      enum: ["rent", "deposit", "deposit_refund", "bill", "penalty", "advance", "electricity"],
       default: "rent",
     },
     month: { type: Number, min: 1, max: 12 },
@@ -32,7 +32,10 @@ const paymentSchema = new mongoose.Schema(
     dueDate: { type: Date },
     receiptNumber: { type: String },
     notes: { type: String },
-  },
+    meterStart: { type: Number },
+    meterEnd: { type: Number },
+    unitRate: { type: Number },
+   },
   { timestamps: true },
 );
 
