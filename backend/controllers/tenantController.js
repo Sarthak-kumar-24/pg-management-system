@@ -1,6 +1,7 @@
 const Tenant = require("../models/Tenant");
 const Room = require("../models/Room");
 const Payment = require("../models/Payment");
+const jwt = require("jsonwebtoken");
 
 // ── helpers ────────────────────────────────────────────────────────────────
 async function assignBed(roomId, bedNumber, tenantId) {
@@ -258,6 +259,31 @@ exports.getRoomPublic = async (req, res) => {
     const room = await Room.findById(req.params.id).populate('building', 'name');
     if (!room) return res.status(404).json({ error: "Room not found" });
     res.json(room);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.publicLogin = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    
+    // 1. Find the tenant by phone
+    const tenant = await Tenant.findOne({ phone }).populate('building room');
+    if (!tenant) {
+      return res.status(404).json({ error: "No account found with this number." });
+    }
+
+    // 2. Generate a secure JWT Token for the tenant
+    const token = jwt.sign(
+      { id: tenant._id, role: 'tenant' },
+      process.env.JWT_SECRET, // Make sure your .env has this!
+      { expiresIn: '30d' }
+    );
+
+    // 3. Send the token and tenant data back
+    res.json({ token, tenant });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
