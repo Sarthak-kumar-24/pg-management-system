@@ -46,4 +46,7 @@ paymentSchema.pre("save", function () {
   
 });
 
+paymentSchema.index({ building: 1, year: -1, month: -1 });
+paymentSchema.index({ tenant: 1 });
+
 module.exports = mongoose.model("Payment", paymentSchema);
