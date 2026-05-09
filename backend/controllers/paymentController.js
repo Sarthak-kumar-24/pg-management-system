@@ -246,7 +246,7 @@ exports.addElectricity = async (req, res, next) => {
     next(err);
   }
 };
-
+/*
 // POST /api/payments/export — Download PDF ONLY
 exports.exportPdf = async (req, res, next) => {
   try {
@@ -286,6 +286,107 @@ exports.exportPdf = async (req, res, next) => {
     }
     
     // 🛑 NOTICE: We removed the auto-delete logic from here!
+    doc.end();
+  } catch (err) {
+    next(err);
+  }
+};
+*/
+// POST /api/payments/export — Download PDF ONLY (Table Format)
+exports.exportPdf = async (req, res, next) => {
+  try {
+    const { months } = req.body;
+    if (!months || months < 1 || months > 5) {
+      return res.status(400).json({ error: "Please specify between 1 and 5 months." });
+    }
+
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
+
+    const payments = await Payment.find({ createdAt: { $gte: startDate } })
+      .populate("tenant", "name phone")
+      .populate("room", "roomNumber")
+      .populate("building", "name")
+      .sort({ paidOn: -1, createdAt: -1 }); // Sort newest first
+
+    if (!payments.length) return res.status(404).json({ error: "No receipts found for this period." });
+
+    // 1. Initialize PDF in Landscape mode for extra width
+    const doc = new PDFDocument({ margin: 40, size: 'A4', layout: 'landscape' });
+    res.setHeader("Content-Type", "application/pdf");
+    doc.pipe(res);
+
+    // 2. Format title
+    const fmtMonth = (d) => d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+    doc.fontSize(18).font("Helvetica-Bold").text(`PG Payment Receipts (${fmtMonth(startDate)} - ${fmtMonth(endDate)})`, { align: "center" });
+    doc.moveDown(2);
+
+    // 3. Define Table Columns & Widths (Total Width ~ 760px)
+    let currentY = doc.y;
+    const cols = [
+      { label: "TENANT", width: 120 },
+      { label: "BUILDING", width: 80 },
+      { label: "ROOM", width: 60 },
+      { label: "AMOUNT", width: 70 },
+      { label: "TYPE", width: 80 },
+      { label: "METHOD", width: 70 },
+      { label: "STATUS", width: 60 },
+      { label: "PAID ON", width: 80 },
+      { label: "RECEIPT", width: 100 }
+    ];
+
+    // Helper: Draw Headers
+    const drawHeaders = (y) => {
+      doc.fontSize(10).font("Helvetica-Bold");
+      let startX = 40;
+      cols.forEach(col => {
+        doc.text(col.label, startX, y, { width: col.width, align: "left" });
+        startX += col.width;
+      });
+      // Draw header underline
+      doc.moveTo(40, y + 15).lineTo(800, y + 15).lineWidth(1).stroke();
+      return y + 25;
+    };
+
+    currentY = drawHeaders(currentY);
+
+    // 4. Draw Rows
+    for (const p of payments) {
+      // Create a new page if we run out of vertical space
+      if (currentY > 520) {
+        doc.addPage();
+        currentY = drawHeaders(40);
+      }
+
+      doc.fontSize(9).font("Helvetica");
+      let startX = 40;
+      
+      const rowData = [
+        p.tenant?.name || "—",
+        p.building?.name || "—",
+        p.room?.roomNumber ? `Rm ${p.room.roomNumber}` : "—",
+        `Rs. ${p.amount}`,
+        p.type.toUpperCase(),
+        (p.paymentMethod || "—").toUpperCase(),
+        p.status.toUpperCase(),
+        p.paidOn ? p.paidOn.toISOString().split("T")[0] : "—",
+        p.receiptNumber || "—"
+      ];
+      
+      // Print text in columns
+      rowData.forEach((text, i) => {
+        doc.text(text, startX, currentY, { width: cols[i].width, align: "left" });
+        startX += cols[i].width;
+      });
+
+      // Draw faint divider line between rows
+      currentY += 20;
+      doc.moveTo(40, currentY - 5).lineTo(800, currentY - 5).lineWidth(0.5).strokeColor('#cccccc').stroke();
+      doc.strokeColor('#000000'); // Reset stroke color to black
+      currentY += 10;
+    }
+
     doc.end();
   } catch (err) {
     next(err);
