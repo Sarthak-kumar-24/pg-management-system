@@ -91,7 +91,7 @@ exports.uploadDocument = async (req, res, next) => {
     // Use a Promise to handle the Cloudinary upload stream
     const uploadToCloudinary = new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { folder: "pg-documents", resource_type: "auto" }, // "auto" allows PDFs and Images
+        { folder: "PG_Prabhat-Pg(Noida)", resource_type: "auto" }, // "auto" allows PDFs and Images
         (error, result) => {
           if (error) reject(error);
           else resolve(result);
