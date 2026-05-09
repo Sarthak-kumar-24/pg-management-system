@@ -188,3 +188,72 @@ const Payments = {
     }
   },
 };
+
+
+// ─── ELECTRICITY BILLING LOGIC ───
+  async openElectricityForm() {
+    el("eStart").value = "";
+    el("eEnd").value = "";
+    el("eSummary").innerHTML = "Units: 0<br>Room Total: ₹0";
+    await Store.fillBuildingsRequired("#eBldg");
+    this.onEBldgChange();
+    openModal("moElectricity");
+  },
+
+  async onEBldgChange() {
+    const bldgId = val("eBldg");
+    if (!bldgId) return;
+    const rooms = await Api.rooms.list({ building: bldgId });
+    const sel = el("eRoom");
+    sel.innerHTML = '<option value="">Select Room</option>' + 
+      rooms.map(r => `<option value="${r._id}">Room ${r.roomNumber} (${r.beds.filter(b=>b.isOccupied).length} tenants)</option>`).join("");
+  },
+
+  calcE() {
+    const start = Number(val("eStart")) || 0;
+    const end = Number(val("eEnd")) || 0;
+    const rate = Number(val("eRate")) || 0;
+    const units = end - start;
+    if (units < 0) {
+      setHtml("eSummary", "⚠ End reading cannot be less than Start!");
+    } else {
+      setHtml("eSummary", `Units Consumed: <b class="c-gold">${units}</b><br>Room Total: <b class="c-gold">₹${units * rate}</b>`);
+    }
+  },
+
+  async saveElectricity() {
+    const data = {
+      building: val("eBldg"),
+      room: val("eRoom"),
+      meterStart: val("eStart"),
+      meterEnd: val("eEnd"),
+      unitRate: val("eRate"),
+      month: val("eMonth"),
+      year: new Date().getFullYear()
+    };
+
+    if (!data.room || data.meterStart === "" || data.meterEnd === "") {
+      return toast("Please fill in Room and Meter Readings", "warn");
+    }
+
+    try {
+      setBusy("elecSaveBtn", true);
+      // Ensure you add this route to your Api object (e.g. Api.payments.addElectricity)
+      // Or make a raw fetch call:
+      const res = await fetch("/api/payments/electricity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
+
+      toast(result.message, "ok");
+      closeModal("moElectricity");
+      this.load(); // Refresh payment list
+    } catch (err) {
+      toast(err.message, "err");
+    } finally {
+      setBusy("elecSaveBtn", false);
+    }
+  },
