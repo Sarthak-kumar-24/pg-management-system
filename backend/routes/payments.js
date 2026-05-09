@@ -11,5 +11,6 @@ router.post("/", auth, ctrl.create);
 router.get("/:id", auth, ctrl.get);
 router.put("/:id", auth, ctrl.update);
 router.delete("/:id", auth, role("owner"), ctrl.remove);
+router.post("/export", auth, ctrl.exportAndClean);
 
 module.exports = router;
