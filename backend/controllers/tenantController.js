@@ -228,8 +228,10 @@ exports.publicOnboard = async (req, res) => {
       phone,
       building: room.building._id,
       room: room._id,
-      status: 'active', // Make them active immediately
+      status: 'active', 
       joiningDate: new Date(),
+      monthlyRent: room.monthlyRent || 0, // 🛑 Satisfies Mongoose requirement
+      depositAmount: 0,                   // 🛑 Good default to prevent other validation errors
       emergencyContact: {
         name: emergencyName,
         phone: emergencyPhone
