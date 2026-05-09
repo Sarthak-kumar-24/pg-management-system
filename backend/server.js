@@ -14,6 +14,7 @@ connectDB();
 app.use(cors({ origin: "*", credentials: true }));
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ── API Routes ───────────────────────────────────────────────────
 app.use("/api/auth", require("./routes/auth"));
@@ -34,6 +35,13 @@ app.use(express.static(frontendPath));
 
 app.get("/login", (req, res) =>
   res.sendFile(path.join(frontendPath, "login.html")),
+);
+app.get("/onboard.html", (req, res) =>
+  res.sendFile(path.join(frontendPath, "onboard.html")),
+);
+
+app.get("/tenant.html", (req, res) =>
+  res.sendFile(path.join(frontendPath, "tenant.html")),
 );
 //app.get("*", (req, res) => res.sendFile(path.join(frontendPath, "index.html")));
 app.get(/.*/, (req, res) =>
