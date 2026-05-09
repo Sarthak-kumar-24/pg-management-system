@@ -56,7 +56,8 @@ const Qrs = {
     // 3. Create the unique onboarding URL 
     // (You will need to build the frontend /onboard page next!)
     const domain = window.location.origin;
-    const onboardUrl = `${domain}/onboard?room=${roomId}`;
+    //const onboardUrl = `${domain}/onboard?room=${roomId}`;
+     const onboardUrl = `${domain}/onboard.html?room=${roomId}`;
 
     // 4. Clear old QR and Generate New One
     const qrContainer = el("qrcodeDisplay");
