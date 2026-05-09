@@ -1,5 +1,6 @@
 const Payment = require("../models/Payment");
 const Tenant = require("../models/Tenant");
+const PDFDocument = require("pdfkit");
 
 // GET /api/payments
 exports.list = async (req, res, next) => {
@@ -241,6 +242,72 @@ exports.addElectricity = async (req, res, next) => {
       message: `Generated electricity bills for ${tenants.length} tenants.`, 
       totalAmount 
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /api/payments/export — Download PDF and auto-delete
+exports.exportAndClean = async (req, res, next) => {
+  try {
+    const { months } = req.body;
+    if (!months || months < 1 || months > 5) {
+      return res.status(400).json({ error: "Please specify between 1 and 5 months." });
+    }
+
+    // Find payments from the last X months
+    const dateLimit = new Date();
+    dateLimit.setMonth(dateLimit.getMonth() - months);
+
+    const payments = await Payment.find({ createdAt: { $gte: dateLimit } })
+      .populate("tenant", "name phone")
+      .populate("room", "roomNumber")
+      .populate("building", "name");
+
+    if (!payments.length) {
+      return res.status(404).json({ error: "No receipts found for this period." });
+    }
+
+    // Initialize the PDF Document
+    const doc = new PDFDocument({ margin: 50 });
+    
+    // Set headers so the frontend knows it's receiving a downloadable file
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="receipts_last_${months}_months.pdf"`);
+    
+    // Pipe the PDF directly to the user's browser
+    doc.pipe(res);
+
+    doc.fontSize(20).text(`PG Receipts (Last ${months} Months)`, { align: "center" });
+    doc.moveDown(2);
+
+    const idsToDelete = [];
+
+    // Loop through payments and add them to the PDF
+    for (const p of payments) {
+      idsToDelete.push(p._id);
+      
+      doc.fontSize(14).text(`Receipt: ${p.receiptNumber || "N/A"}`, { underline: true });
+      doc.fontSize(12).text(`Date: ${p.paidOn ? p.paidOn.toISOString().split("T")[0] : "—"}`);
+      doc.text(`Tenant: ${p.tenant?.name || "—"} (${p.tenant?.phone || "—"})`);
+      doc.text(`Building: ${p.building?.name || "—"} | Room: ${p.room?.roomNumber || "—"}`);
+      doc.text(`Type: ${p.type.toUpperCase()}`);
+      doc.text(`Method: ${p.paymentMethod.toUpperCase()}`);
+      doc.text(`Status: ${p.status.toUpperCase()}`);
+      doc.moveDown();
+      doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+      doc.moveDown();
+    }
+
+    // Finalize the PDF
+    doc.end();
+
+    // 🛑 ONCE THE DOWNLOAD FINISHES, DELETE THE DATA FROM MONGO ATLAS
+    res.on('finish', async () => {
+      // If you change your mind about deleting, just comment out the line below!
+      await Payment.deleteMany({ _id: { $in: idsToDelete } });
+    });
+
   } catch (err) {
     next(err);
   }
