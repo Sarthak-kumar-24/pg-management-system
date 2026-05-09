@@ -84,3 +84,39 @@ function spinner() {
 function emptyState(icon, title, text) {
   return `<div class="empty"><div class="empty-ico">${icon}</div><h3>${title}</h3><p>${text}</p></div>`;
 }
+
+
+// ... existing code ...
+function spinner() {
+  return '<div class="spin-wrap"><div class="spinner"></div></div>';
+}
+function emptyState(icon, title, text) {
+  return `<div class="empty"><div class="empty-ico">${icon}</div><h3>${title}</h3><p>${text}</p></div>`;
+}
+
+// ─── THEME TOGGLE LOGIC (ADD THIS AT THE VERY BOTTOM) ───
+function toggleTheme() {
+  const isLight = document.body.classList.toggle("light-mode");
+  const btn = document.getElementById("themeToggleBtn");
+  
+  if (isLight) {
+    localStorage.setItem("pg_theme", "light");
+    if (btn) btn.innerText = "🌙";
+  } else {
+    localStorage.setItem("pg_theme", "dark");
+    if (btn) btn.innerText = "☀️";
+  }
+}
+
+function initTheme() {
+  const savedTheme = localStorage.getItem("pg_theme");
+  const btn = document.getElementById("themeToggleBtn");
+  
+  if (savedTheme === "light") {
+    document.body.classList.add("light-mode");
+    if (btn) btn.innerText = "🌙";
+  } else {
+    document.body.classList.remove("light-mode");
+    if (btn) btn.innerText = "☀️";
+  }
+}
