@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const user  = Auth.getUser();
   if (!token || !user) { window.location.href = '/login.html'; return; }
 
+   initTheme();
+
   // ── Populate sidebar user info ───────────────────────────────
   setText('sbUserName', user.name || 'User');
   setText('sbUserRole', user.role || 'manager');
