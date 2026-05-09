@@ -1617,35 +1617,24 @@ tbody tr:hover td {
 
 /* ════════════════ LIGHT MODE OVERRIDES ════════════════ */
 body.light-mode {
-  /* Replace your dark background with light/white backgrounds */
-  --bg-main: #f4f6f8;       /* App background */
-  --bg-card: #ffffff;       /* Card and Modal backgrounds */
-  --bg-sidebar: #ffffff;    /* Sidebar background */
-  
-  /* Invert your text colors */
-  --text-main: #111827;     /* Primary text (Dark Grey) */
-  --text-muted: #6b7280;    /* Secondary text (Medium Grey) */
-  
-  /* Borders and dividers */
-  --border-color: #e5e7eb;  /* Light grey lines */
-  
-  /* Input fields */
-  --input-bg: #f9fafb;
-  --input-border: #d1d5db;
-  --input-text: #111827;
-}
+  /* 1. Backgrounds (Invert dark to light) */
+  --bg: #f0f2f5;       /* Main app background */
+  --s1: #ffffff;       /* Sidebar, Header, Cards, Modals */
+  --s2: #f8f9fa;       /* Inputs, hover states, secondary boxes */
+  --s3: #e9ecef;       /* Active tabs, progress bars */
+  --s4: #dee2e6;       /* Scrollbars */
 
-/* Specific tweaks for light mode readability */
-body.light-mode .hdr {
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border-color);
-}
+  /* 2. Borders (Change from white-opacity to black-opacity) */
+  --b1: rgba(0, 0, 0, 0.06);  /* Faint borders (tables, dividers) */
+  --b2: rgba(0, 0, 0, 0.15);  /* Stronger borders (inputs) */
+  --b3: rgba(0, 0, 0, 0.25);  /* Hover borders */
 
-body.light-mode .sidebar {
-  border-right: 1px solid var(--border-color);
-}
+  /* 3. Text Colors (Invert light to dark) */
+  --tx: #111827;       /* Primary text */
+  --tx2: #4b5563;      /* Secondary text / Labels */
+  --tx3: #6b7280;      /* Muted text / Placeholders */
 
-body.light-mode .hdr-btn {
-  color: var(--text-main);
-  background: var(--bg-main);
+  /* 4. Soften the Shadows for Light Mode */
+  --sh: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --sh2: 0 2px 14px rgba(0, 0, 0, 0.05);
 }
