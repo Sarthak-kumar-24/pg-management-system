@@ -1614,3 +1614,38 @@ tbody tr:hover td {
     grid-template-columns: 1fr;
   }
 }
+
+/* ════════════════ LIGHT MODE OVERRIDES ════════════════ */
+body.light-mode {
+  /* Replace your dark background with light/white backgrounds */
+  --bg-main: #f4f6f8;       /* App background */
+  --bg-card: #ffffff;       /* Card and Modal backgrounds */
+  --bg-sidebar: #ffffff;    /* Sidebar background */
+  
+  /* Invert your text colors */
+  --text-main: #111827;     /* Primary text (Dark Grey) */
+  --text-muted: #6b7280;    /* Secondary text (Medium Grey) */
+  
+  /* Borders and dividers */
+  --border-color: #e5e7eb;  /* Light grey lines */
+  
+  /* Input fields */
+  --input-bg: #f9fafb;
+  --input-border: #d1d5db;
+  --input-text: #111827;
+}
+
+/* Specific tweaks for light mode readability */
+body.light-mode .hdr {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+}
+
+body.light-mode .sidebar {
+  border-right: 1px solid var(--border-color);
+}
+
+body.light-mode .hdr-btn {
+  color: var(--text-main);
+  background: var(--bg-main);
+}
