@@ -154,6 +154,7 @@ const Qrs = {
     printWindow.document.close();
   }
   */
+   /*
    print() {
     const title = document.getElementById("qrPrintTitle").innerText;
     
@@ -214,6 +215,64 @@ const Qrs = {
       // Clean up the iframe after printing is done
       setTimeout(() => document.body.removeChild(iframe), 2000);
     }, 250);
+  }
+  */
+   print() {
+    const title = document.getElementById("qrPrintTitle").innerText;
+    const canvas = document.querySelector("#qrcodeDisplay canvas");
+    
+    // 1. Ensure the QR code has finished drawing
+    if (!canvas) {
+      toast("QR Code is still generating...", "warn");
+      return;
+    }
+
+    // 2. Convert the Canvas to a real Image URL (Prevents blank pages!)
+    const qrSrc = canvas.toDataURL("image/png");
+
+    // 3. Create a dedicated print container if it doesn't exist
+    let printSection = document.getElementById("print-section");
+    if (!printSection) {
+      printSection = document.createElement("div");
+      printSection.id = "print-section";
+      document.body.appendChild(printSection);
+      
+      // Inject the Print CSS rules directly into the page
+      const style = document.createElement("style");
+      style.innerHTML = `
+        @media print {
+          /* Hide absolutely everything in the app */
+          body * { visibility: hidden; }
+          
+          /* Hide the dark modal backgrounds completely */
+          .mo { display: none !important; }
+          
+          /* Show ONLY our print section */
+          #print-section, #print-section * { visibility: visible; }
+          
+          /* Position it perfectly at the top center of the A4 paper */
+          #print-section { 
+            position: absolute; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            text-align: center; 
+            padding-top: 50px; 
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // 4. Fill the print section with our layout
+    printSection.innerHTML = `
+      <h1 style="font-family: sans-serif; font-size: 40px; margin-bottom: 10px; color: black;">${title}</h1>
+      <p style="font-family: sans-serif; font-size: 20px; color: #555; margin-bottom: 40px;">Scan to register and upload documents</p>
+      <img src="${qrSrc}" style="width: 300px; height: 300px; border: 3px dashed black; padding: 20px; border-radius: 12px;" />
+    `;
+
+    // 5. Trigger the native browser print
+    window.print();
   }
 };
 
