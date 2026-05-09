@@ -8,7 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const user  = Auth.getUser();
   if (!token || !user) { window.location.href = '/login.html'; return; }
 
-   initTheme();
+  initTheme();
+
+  const savedPgName = localStorage.getItem("custom_pg_name");
+  if (savedPgName) {
+    const titleEl = document.getElementById("logoTitle");
+    const subEl = document.getElementById("logoSub");
+    if (titleEl) titleEl.textContent = savedPgName;
+    if (subEl) subEl.style.display = "none"; // Hide "Management" if custom name is used
+  }
 
   // ── Populate sidebar user info ───────────────────────────────
   setText('sbUserName', user.name || 'User');
