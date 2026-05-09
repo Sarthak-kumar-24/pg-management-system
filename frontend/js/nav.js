@@ -23,6 +23,7 @@ const Nav = {
     dashboard: { title: 'Dashboard',         load: () => Dashboard.load() },
     buildings: { title: 'Buildings',          load: () => Buildings.load() },
     rooms:     { title: 'Rooms & Beds',       load: () => Rooms.load() },
+    qrs:       { title: 'Room QRs',           load: () => Qrs.load() },
     tenants:   { title: 'All Tenants',        load: () => Tenants.load() },
     vacate:    { title: 'Vacate Management',  load: () => Vacate.load() },
     payments:  { title: 'Payments',           load: () => Payments.load() },
