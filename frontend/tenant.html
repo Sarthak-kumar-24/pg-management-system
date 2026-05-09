@@ -1388,26 +1388,45 @@ async function uploadDocument() {
   const type = document.getElementById('dType').value;
   const nameOk = validateField('dName','dNameErr', v => v.trim().length >= 2);
   if (!nameOk) return;
-  if (!currentFile) { document.getElementById('dFileErr').classList.add('show'); toast('Please select a file', 'warn'); return; }
+  if (!currentFile) { 
+    document.getElementById('dFileErr').classList.add('show'); 
+    toast('Please select a file', 'warn'); 
+    return; 
+  }
   document.getElementById('dFileErr').classList.remove('show');
 
   const btn = document.getElementById('uploadBtn');
   btn.classList.add('btn-loading'); btn.textContent = 'Uploading…';
 
   try {
-    const base64 = await fileToBase64(currentFile);
-    await api('POST', '/documents', {
-      tenant:   tenantData._id,
-      building: tenantData.building?._id || tenantData.building,
-      name, type,
-      fileData: base64,
-      mimeType: currentFile.type,
-      fileName: currentFile.name,
-      fileSize: currentFile.size,
+ // 1. Pack the physical file into FormData (Required for Cloudinary/Multer)
+    const formData = new FormData();
+    formData.append("docFile", currentFile); // Must match backend .single('docFile')
+    formData.append("name", name);
+    formData.append("type", type);
+    formData.append("building", tenantData.building?._id || tenantData.building);
+    formData.append("tenant", tenantData._id);
+
+    // 2. Grab the tenant's security token
+    const token = localStorage.getItem('pt_token');
+
+    // 3. Send via raw fetch so the browser can set the Multipart headers automatically
+    const res = await fetch("/api/documents", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`
+        // 🛑 DO NOT add 'Content-Type' here. The browser must set it for files!
+      },
+      body: formData
     });
+
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error);
+
     closeModal('uploadModal');
-    toast('Document uploaded!', 'ok');
+    toast('Document uploaded securely!', 'ok');
     loadDocuments();
+    clearModalFile(); // Clean up the UI
   } catch (err) {
     toast('Error: ' + err.message, 'err');
   } finally {
