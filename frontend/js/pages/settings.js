@@ -5,10 +5,13 @@ const Settings = {
   async load() {
     const user = Auth.getUser();
     if (!user) return;
+     
     setVal('settingName',  user.name  || '');
     setVal('settingEmail', user.email || '');
     setVal('settingPhone', user.phone || '');
     setText('settingRoleDisplay', user.role || '—');
+
+    setVal('settingPgName', localStorage.getItem('custom_pg_name') || '');
     // Clear password fields
     setVal('curPwd', ''); setVal('newPwd', ''); setVal('cfmPwd', '');
   },
@@ -27,9 +30,27 @@ const Settings = {
       setText('sbUserName', updated.name);
       const av = el('sbUserAv');
       if (av) av.textContent = initials(updated.name);
+       // 🛑 ADDED: Save Custom PG Name and update Navbar Logo instantly
+      const pgNameInput = el('settingPgName');
+      if (pgNameInput) { // Ensure the field exists (owners only)
+        const newName = pgNameInput.value.trim();
+        if (newName) {
+          localStorage.setItem("custom_pg_name", newName);
+          setText('logoTitle', newName);
+          if (el('logoSub')) el('logoSub').style.display = "none";
+        } else {
+          localStorage.removeItem("custom_pg_name");
+          setText('logoTitle', "PG Pro");
+          if (el('logoSub')) el('logoSub').style.display = "block";
+        }
+      }
       toast('Profile updated successfully', 'ok');
-    } catch (err) { toast(err.message, 'err'); }
-    finally { setBusy('profileSaveBtn', false, 'Save Profile'); }
+    } catch (err) { 
+       toast(err.message, 'err');
+    }
+    finally { 
+       setBusy('profileSaveBtn', false, 'Save Profile'); 
+    }
   },
 
   async changePassword() {
@@ -44,7 +65,11 @@ const Settings = {
       await Api.auth.changePassword({ currentPassword: cur, newPassword: nw });
       toast('Password updated successfully', 'ok');
       setVal('curPwd', ''); setVal('newPwd', ''); setVal('cfmPwd', '');
-    } catch (err) { toast(err.message, 'err'); }
-    finally { setBusy('changePwdBtn', false, 'Update Password'); }
+    } catch (err) { 
+       toast(err.message, 'err'); 
+    }
+    finally { 
+       setBusy('changePwdBtn', false, 'Update Password'); 
+    }
   },
 };
