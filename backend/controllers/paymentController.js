@@ -247,15 +247,14 @@ exports.addElectricity = async (req, res, next) => {
   }
 };
 
-// POST /api/payments/export — Download PDF and auto-delete
-exports.exportAndClean = async (req, res, next) => {
+// POST /api/payments/export — Download PDF ONLY
+exports.exportPdf = async (req, res, next) => {
   try {
     const { months } = req.body;
     if (!months || months < 1 || months > 5) {
       return res.status(400).json({ error: "Please specify between 1 and 5 months." });
     }
 
-    // Find payments from the last X months
     const dateLimit = new Date();
     dateLimit.setMonth(dateLimit.getMonth() - months);
 
@@ -264,50 +263,47 @@ exports.exportAndClean = async (req, res, next) => {
       .populate("room", "roomNumber")
       .populate("building", "name");
 
-    if (!payments.length) {
-      return res.status(404).json({ error: "No receipts found for this period." });
-    }
+    if (!payments.length) return res.status(404).json({ error: "No receipts found for this period." });
 
-    // Initialize the PDF Document
     const doc = new PDFDocument({ margin: 50 });
-    
-    // Set headers so the frontend knows it's receiving a downloadable file
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="receipts_last_${months}_months.pdf"`);
-    
-    // Pipe the PDF directly to the user's browser
     doc.pipe(res);
 
     doc.fontSize(20).text(`PG Receipts (Last ${months} Months)`, { align: "center" });
     doc.moveDown(2);
 
-    const idsToDelete = [];
-
-    // Loop through payments and add them to the PDF
     for (const p of payments) {
-      idsToDelete.push(p._id);
-      
       doc.fontSize(14).text(`Receipt: ${p.receiptNumber || "N/A"}`, { underline: true });
       doc.fontSize(12).text(`Date: ${p.paidOn ? p.paidOn.toISOString().split("T")[0] : "—"}`);
       doc.text(`Tenant: ${p.tenant?.name || "—"} (${p.tenant?.phone || "—"})`);
       doc.text(`Building: ${p.building?.name || "—"} | Room: ${p.room?.roomNumber || "—"}`);
-      doc.text(`Type: ${p.type.toUpperCase()}`);
-      doc.text(`Method: ${p.paymentMethod.toUpperCase()}`);
-      doc.text(`Status: ${p.status.toUpperCase()}`);
+      doc.text(`Type: ${p.type.toUpperCase()} | Method: ${p.paymentMethod.toUpperCase()}`);
+      doc.text(`Status: ${p.status.toUpperCase()} | Amount: Rs. ${p.amount}`);
       doc.moveDown();
       doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
       doc.moveDown();
     }
-
-    // Finalize the PDF
+    
+    // 🛑 NOTICE: We removed the auto-delete logic from here!
     doc.end();
+  } catch (err) {
+    next(err);
+  }
+};
 
-    // 🛑 ONCE THE DOWNLOAD FINISHES, DELETE THE DATA FROM MONGO ATLAS
-    res.on('finish', async () => {
-      // If you change your mind about deleting, just comment out the line below!
-      await Payment.deleteMany({ _id: { $in: idsToDelete } });
-    });
+// DELETE /api/payments/bulk — Manual Owner Deletion
+exports.deleteBulk = async (req, res, next) => {
+  try {
+    const { months } = req.body;
+    if (!months) return res.status(400).json({ error: "Months required" });
 
+    const dateLimit = new Date();
+    dateLimit.setMonth(dateLimit.getMonth() - months);
+
+    const result = await Payment.deleteMany({ createdAt: { $gte: dateLimit } });
+    
+    res.json({ message: `Success! ${result.deletedCount} old records were securely deleted.` });
   } catch (err) {
     next(err);
   }
