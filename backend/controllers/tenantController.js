@@ -209,3 +209,54 @@ exports.vacate = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.publicOnboard = async (req, res) => {
+  try {
+    const { name, phone, roomId, emergencyName, emergencyPhone } = req.body;
+
+    // 1. Verify the Room exists
+    const room = await Room.findById(roomId).populate('building');
+    if (!room) return res.status(404).json({ error: "Invalid Room QR Code." });
+
+    // 2. Check if phone already exists
+    const existing = await Tenant.findOne({ phone });
+    if (existing) return res.status(400).json({ error: "Phone number already registered." });
+
+    // 3. Create the Tenant
+    const newTenant = new Tenant({
+      name,
+      phone,
+      building: room.building._id,
+      room: room._id,
+      status: 'active', // Make them active immediately
+      joiningDate: new Date(),
+      emergencyContact: {
+        name: emergencyName,
+        phone: emergencyPhone
+      }
+      // Note: Cloudinary integration for their ID proof would be processed here 
+      // if you attach the uploadMiddleware to this route!
+    });
+
+    await newTenant.save();
+
+    res.status(201).json({ 
+      message: "Welcome to PG Pro!", 
+      tenant: newTenant 
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Also add a quick function to fetch room details for the welcome screen
+exports.getRoomPublic = async (req, res) => {
+  try {
+    const room = await Room.findById(req.params.id).populate('building', 'name');
+    if (!room) return res.status(404).json({ error: "Room not found" });
+    res.json(room);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
