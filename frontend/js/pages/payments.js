@@ -260,7 +260,7 @@ const Payments = {
       setBusy("elecSaveBtn", false);
     }
   },
-
+/*
   async downloadReceipts() {
     // 1. Ask for timeframe
     const months = prompt("Enter number of months to download (1 to 5):", "1");
@@ -290,6 +290,89 @@ const Payments = {
       const a = document.createElement("a");
       a.href = url;
       a.download = `receipts_${months}_months.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      // 3. Temporarily remove the loading spinner so they can see the popup
+      setBusy("bulkDownloadBtn", false);
+
+      // 4. MANUAL DECISION: Ask the owner if they want to delete
+      const wantToDelete = await confirmAction(
+        "📄 PDF Downloaded successfully! \n\nDo you also want to permanently DELETE these older records from the database to save space?",
+        "Yes, Delete Records",
+        true
+      );
+
+      // 5. If they click yes, run the deletion
+      if (wantToDelete) {
+        setBusy("bulkDownloadBtn", true);
+        const delRes = await fetch("/api/payments/bulk", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ months: Number(months) })
+        });
+        
+        const delData = await delRes.json();
+        if (!delRes.ok) throw new Error(delData.error);
+        
+        toast(delData.message, "ok");
+        this.load(); // Refresh the list
+      } else {
+        // If they click cancel
+        toast("Download complete. Database was not changed.", "ok");
+      }
+
+    } catch (err) {
+      toast(err.message, "err");
+    } finally {
+      setBusy("bulkDownloadBtn", false);
+    }
+  }
+  */
+
+     async downloadReceipts() {
+    // 1. Ask for timeframe
+    const months = prompt("Enter number of months to download (1 to 5):", "1");
+    if (!months || isNaN(months) || months < 1 || months > 5) return;
+
+    try {
+      setBusy("bulkDownloadBtn", true);
+      const token = localStorage.getItem("pg_token");
+
+      // 2. Fetch and Download the PDF first
+      const res = await fetch("/api/payments/export", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ months: Number(months) })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Download failed");
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      
+      // 🛑 NEW: Calculate precise Filename
+      const endMonth = new Date();
+      const startMonth = new Date();
+      startMonth.setMonth(startMonth.getMonth() - Number(months));
+      
+      const formatMonth = (d) => d.toLocaleString('en-US', { month: 'short', year: 'numeric' }).replace(' ', '');
+      const fileName = `PaymentReceipts_${formatMonth(startMonth)}-${formatMonth(endMonth)}.pdf`;
+      
+      a.download = fileName; // Apply dynamic filename
+      
       document.body.appendChild(a);
       a.click();
       a.remove();
