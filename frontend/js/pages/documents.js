@@ -84,13 +84,15 @@ const Documents = {
     };
     reader.readAsDataURL(file);
   },
-
+/*
   async save() {
     const name  = val('docFormName');
     const type  = val('docFormType');
     const bldg  = val('docFormBuilding');
     const tenant= val('docFormTenant');
-    if (!name)  return toast('Document name is required', 'warn');
+    const fileInput = document.getElementById("docFile");
+    const file = fileInput.files[0];
+    if (!name || !building) return toast("Name and Building are required", "warn");
     if (!bldg)  return toast('Please select a building', 'warn');
 
     const file = el('docFile')?.files?.[0];
@@ -116,7 +118,65 @@ const Documents = {
     } catch (err) { toast(err.message, 'err'); }
     finally { setBusy('docSaveBtn', false, 'Upload Document'); }
   },
+   */
 
+   async save() {
+    const name = val("docFormName");
+    const type = val("docFormType");
+    const building = val("docFormBuilding");
+    const tenant = val("docFormTenant");
+    const fileInput = el("docFile");
+    const file = fileInput?.files?.[0];
+
+    // 1. Clean Validation
+    if (!name || !building) return toast("Name and Building are required", "warn");
+    if (!file) return toast("Please select a file to upload", "warn");
+
+    // 2. Size Limit Check (4 MB)
+    const MAX_MB = 4;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      return toast(`File is too large! Please keep it under ${MAX_MB} MB.`, "err");
+    }
+
+    try {
+      setBusy("docSaveBtn", true);
+      
+      // 3. Use FormData (Required for Multer/Cloudinary)
+      const formData = new FormData();
+      formData.append("docFile", file); // Must match backend .single('docFile')
+      formData.append("name", name);
+      formData.append("type", type);
+      formData.append("building", building);
+      if (tenant) formData.append("tenant", tenant);
+
+      const token = localStorage.getItem("pg_token");
+
+      // 4. Raw Fetch (Browser automatically handles multipart headers)
+      const res = await fetch("/api/documents", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error);
+
+      toast("Document uploaded securely!", "ok");
+      closeModal("moDocument");
+      
+      // Reset form
+      el("docFormName").value = "";
+      if (fileInput) fileInput.value = "";
+      
+      this.load();
+    } catch (err) {
+      toast(err.message, "err");
+    } finally {
+      setBusy("docSaveBtn", false);
+    }
+  }
   async download(id, name) {
     try {
       const doc = await Api.documents.get(id);
