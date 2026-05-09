@@ -346,11 +346,19 @@
               <div class="spin-wrap"><div class="spinner"></div></div>
             </div>
           </section>
-          <div id="page-qrs" class="page">
-             <div class="pg-hdr">
-               <div class="pg-hdr-l">
-                 <h1>Room QR Codes</h1>
-                 </div>
+         <div id="page-qrs" class="page">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Room QR Codes</h1>
+                <p>Generate printable onboarding QR codes for each room.</p>
+              </div>
+              <div class="pg-hdr-r">
+                <select id="qrBldgFilter" class="fc" style="width: 200px" onchange="Qrs.loadRooms()">
+                  <option value="">Select Building...</option>
+                </select>
+              </div>
+            </div>
+            <div id="qrRoomList" class="ga"></div>
           </div>
 
           <!-- ══════════════════ TENANTS ══════════════════ -->
@@ -1283,11 +1291,25 @@
         </div>
       </div>
     </div>
-    <div id="moPrintQr" class="mo">
+<div id="moPrintQr" class="mo">
       <div class="mo-box mo-sm">
         <div class="mo-hdr">
           <div class="mo-title">Print Room QR</div>
+          <button class="mo-close" onclick="closeModal('moPrintQr')">✕</button>
+        </div>
+        <div class="mo-body tx-c">
+          <h2 id="qrPrintTitle" class="font-s fw-7 mb-2">Room Name</h2>
+          <p class="tx-sm c-muted mb-4">Scan to register and upload documents.</p>
+          
+          <div id="qrcodeDisplay" style="display: flex; justify-content: center; margin-bottom: 20px;"></div>
+          
+          <div class="alert al-info tx-xs tx-l">
+            Stick this inside the room. Tenants scanning this will be assigned to this specific room automatically.
           </div>
+        </div>
+        <div class="mo-foot">
+          <button class="btn btn-primary" onclick="Qrs.print()">🖨️ Print QR Code</button>
+        </div>
       </div>
     </div>
 
@@ -2171,6 +2193,7 @@
     <script src="/js/pages/vacate.js"></script>
     <script src="/js/pages/settings.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="/js/pages/qrs.js"></script>
     <script src="/js/main.js"></script>
   </body>
 </html>
