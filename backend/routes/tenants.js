@@ -9,5 +9,7 @@ router.get("/:id", auth, ctrl.get);
 router.put("/:id", auth, ctrl.update);
 router.delete("/:id", auth, role("owner"), ctrl.remove);
 router.post("/:id/vacate", auth, ctrl.vacate);
+router.get("/public/room/:id", ctrl.getRoomPublic);
+router.post("/public/onboard", ctrl.publicOnboard);
 
 module.exports = router;
