@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PG Pro — Tenant Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════ CSS VARIABLES (THEMES) ══════════════════════════ */
+:root {
+  --tr: .22s ease;
+  --r:  14px; --r2: 10px; --r3: 6px;
+  --gold: #d4a853; --gold2: #f0c97a; --gG: linear-gradient(135deg,#d4a853,#f0c97a 45%,#c08b35);
+}
+[data-theme="dark"] {
+  --bg:    #080b17; --s1: #0e1322; --s2: #141c30; --s3: #1b2540; --s4: #22304e;
+  --b1: rgba(255,255,255,.055); --b2: rgba(255,255,255,.1); --b3: rgba(255,255,255,.17);
+  --tx: #e2e8f4; --tx2: #8a97b5; --tx3: #4e5c78;
+  --blue:#4f8ef7; --blue2:#7cb0ff;
+  --green:#34d399; --red:#f87171; --yellow:#fbbf24; --purple:#a78bfa; --cyan:#22d3ee;
+  --sh: 0 8px 32px rgba(0,0,0,.55);
+  --card-bg: rgba(14,19,34,.75);
+  --glass: rgba(14,19,34,.6);
+}
+[data-theme="light"] {
+  --bg:    #f0f4ff; --s1: #ffffff; --s2: #f5f7ff; --s3: #eaedfa; --s4: #dde2f5;
+  --b1: rgba(0,0,0,.07); --b2: rgba(0,0,0,.12); --b3: rgba(0,0,0,.2);
+  --tx: #0f1b35; --tx2: #5a6785; --tx3: #9aa5c0;
+  --blue:#3b7af0; --blue2:#2563d4;
+  --green:#059669; --red:#dc2626; --yellow:#d97706; --purple:#7c3aed; --cyan:#0891b2;
+  --sh: 0 4px 24px rgba(0,0,30,.1);
+  --card-bg: rgba(255,255,255,.9);
+  --glass: rgba(255,255,255,.75);
+}
+
+/* ══════════════════════ RESET & BASE ═════════════════════════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body { font-family:'DM Sans',system-ui,sans-serif; background:var(--bg); color:var(--tx); min-height:100vh; -webkit-font-smoothing:antialiased; transition:background var(--tr), color var(--tr); }
+::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:var(--s2); } ::-webkit-scrollbar-thumb { background:var(--s4); border-radius:3px; } ::-webkit-scrollbar-thumb:hover { background:var(--gold); }
+a { text-decoration:none; color:inherit; }
+button { font-family:inherit; cursor:pointer; }
+input, select, textarea { font-family:inherit; }
+
+/* ══════════════════════ BG BLOBS ═════════════════════════════════════════ */
+.bg-blobs { position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
+.blob { position:absolute; border-radius:50%; filter:blur(80px); opacity:.35; animation:drift 12s ease-in-out infinite alternate; }
+[data-theme="dark"] .blob { opacity:.18; }
+[data-theme="light"] .blob { opacity:.25; }
+.blob-1 { width:600px; height:600px; background:radial-gradient(circle,#d4a85366,transparent 70%); top:-150px; left:-150px; animation-duration:14s; }
+.blob-2 { width:500px; height:500px; background:radial-gradient(circle,#4f8ef744,transparent 70%); bottom:-100px; right:-100px; animation-duration:10s; animation-delay:-5s; }
+.blob-3 { width:400px; height:400px; background:radial-gradient(circle,#a78bfa33,transparent 70%); top:40%; left:40%; animation-duration:16s; animation-delay:-8s; }
+@keyframes drift { from{transform:translate(0,0) scale(1)} to{transform:translate(40px,30px) scale(1.08)} }
+
+/* ══════════════════════ HEADER ══════════════════════════════════════════ */
+.hdr {
+  position: sticky; top:0; z-index:200;
+  backdrop-filter: blur(18px);
+  background: var(--glass);
+  border-bottom: 1px solid var(--b1);
+  padding: 0 24px;
+  display: flex; align-items:center; gap:12px; height:62px;
+  transition: background var(--tr);
+}
+.hdr-logo { display:flex; align-items:center; gap:10px; }
+.hdr-logo-ico { width:36px; height:36px; border-radius:9px; background:var(--gG); display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow:0 4px 14px rgba(212,168,83,.4); flex-shrink:0; }
+.hdr-logo-txt h1 { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; line-height:1; }
+.hdr-logo-txt span { font-size:9px; color:var(--gold); letter-spacing:2px; text-transform:uppercase; }
+.hdr-tag { font-size:11px; padding:3px 9px; border-radius:20px; background:rgba(212,168,83,.12); color:var(--gold); font-weight:600; border:1px solid rgba(212,168,83,.25); }
+.hdr-space { flex:1; }
+.hdr-nav { display:flex; gap:2px; }
+.hdr-nav-item { padding:7px 13px; border-radius:var(--r3); font-size:13px; font-weight:500; color:var(--tx2); cursor:pointer; transition:all var(--tr); border:none; background:none; }
+.hdr-nav-item:hover { color:var(--tx); background:var(--s3); }
+.hdr-nav-item.active { color:var(--gold); background:rgba(212,168,83,.1); }
+.theme-toggle { width:36px; height:36px; border-radius:50%; background:var(--s2); border:1px solid var(--b2); color:var(--tx2); display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; transition:all var(--tr); }
+.theme-toggle:hover { background:var(--s3); color:var(--tx); }
+.mob-menu-btn { display:none; background:none; border:none; color:var(--tx2); font-size:20px; cursor:pointer; }
+
+/* ══════════════════════ LOGIN PAGE ══════════════════════════════════════ */
+#loginPage {
+  min-height: 100vh; display:flex; align-items:center; justify-content:center;
+  padding: 20px;
+}
+.login-card {
+  width: 100%; max-width: 420px;
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--b2);
+  border-radius: 22px;
+  padding: 40px;
+  box-shadow: var(--sh);
+  animation: popIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn { from{opacity:0;transform:scale(.94) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.lc-logo { text-align:center; margin-bottom:28px; }
+.lc-logo-ico { width:60px; height:60px; border-radius:16px; background:var(--gG); display:inline-flex; align-items:center; justify-content:center; font-size:26px; box-shadow:0 8px 28px rgba(212,168,83,.38); margin-bottom:14px; }
+.lc-logo h2 { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; }
+.lc-logo p { font-size:13px; color:var(--tx2); margin-top:5px; }
+.step-dots { display:flex; gap:8px; justify-content:center; margin-bottom:24px; }
+.dot { width:8px; height:8px; border-radius:50%; background:var(--b3); transition:all .3s; }
+.dot.active { background:var(--gold); width:22px; border-radius:4px; }
+.dot.done { background:var(--green); }
+
+/* ══════════════════════ PORTAL WRAPPER ══════════════════════════════════ */
+#portalPage { display:none; }
+.portal-wrap { max-width:960px; margin:0 auto; padding:24px 20px; }
+
+/* ══════════════════════ HERO CARD ════════════════════════════════════════ */
+.hero-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--b2);
+  border-radius: 22px;
+  padding: 28px 30px;
+  margin-bottom: 22px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--sh);
+}
+.hero-card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:3px;
+  background: var(--gG);
+}
+.hero-inner { display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
+.hero-av-wrap { position:relative; flex-shrink:0; }
+.hero-av {
+  width:80px; height:80px; border-radius:20px;
+  background: var(--gG);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Playfair Display',serif; font-weight:700; font-size:30px; color:#0b0e1a;
+  overflow:hidden; box-shadow:0 6px 22px rgba(212,168,83,.35);
+}
+.hero-av img { width:100%; height:100%; object-fit:cover; }
+.hero-av-edit {
+  position:absolute; bottom:-4px; right:-4px;
+  width:26px; height:26px; border-radius:50%;
+  background:var(--gold); color:#0b0e1a;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; cursor:pointer; border:2px solid var(--bg);
+  transition:transform var(--tr);
+}
+.hero-av-edit:hover { transform:scale(1.15); }
+.hero-info { flex:1; min-width:200px; }
+.hero-name { font-family:'Playfair Display',serif; font-size:24px; font-weight:700; line-height:1.1; }
+.hero-meta { font-size:13px; color:var(--tx2); margin-top:6px; display:flex; flex-wrap:wrap; gap:10px; }
+.hero-meta-item { display:flex; align-items:center; gap:5px; }
+.hero-badges { display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+.hero-stats { display:flex; gap:16px; flex-wrap:wrap; }
+.hero-stat { text-align:center; padding:12px 20px; background:var(--s2); border:1px solid var(--b1); border-radius:var(--r2); min-width:90px; }
+.hero-stat-val { font-family:'Playfair Display',serif; font-size:20px; font-weight:700; }
+.hero-stat-lbl { font-size:11px; color:var(--tx2); margin-top:2px; }
+
+/* ══════════════════════ SECTION TABS (bottom nav mobile) ════════════════ */
+.section-nav {
+  display:flex; gap:6px; background:var(--card-bg);
+  backdrop-filter:blur(16px);
+  border:1px solid var(--b1);
+  border-radius:16px; padding:6px;
+  margin-bottom:22px;
+  box-shadow: var(--sh);
+  overflow-x:auto;
+}
+.sec-tab {
+  flex:1; min-width:80px; padding:10px 12px;
+  border-radius:10px; font-size:12.5px; font-weight:600;
+  cursor:pointer; border:none; background:none; color:var(--tx2);
+  transition:all var(--tr); display:flex; flex-direction:column; align-items:center; gap:4px;
+}
+.sec-tab:hover { color:var(--tx); background:var(--s3); }
+.sec-tab.active { background:var(--gG); color:#0b0e1a; box-shadow:0 4px 14px rgba(212,168,83,.3); }
+.sec-tab-ico { font-size:18px; }
+.sec-tab-lbl { font-size:11px; }
+
+/* ══════════════════════ SECTION PANELS ══════════════════════════════════ */
+.sec-panel { display:none; animation:slideUp .25s ease; }
+.sec-panel.active { display:block; }
+@keyframes slideUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+/* ══════════════════════ CARDS ════════════════════════════════════════════ */
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--b1);
+  border-radius: var(--r);
+  padding: 22px;
+  box-shadow: var(--sh);
+  margin-bottom: 16px;
+  transition: border-color var(--tr);
+}
+.card:hover { border-color: var(--b2); }
+.card-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.card-title { font-family:'Playfair Display',serif; font-size:17px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.card-title-ico { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:15px; }
+.ico-gold { background:rgba(212,168,83,.15); } .ico-blue { background:rgba(79,142,247,.15); }
+.ico-green { background:rgba(52,211,153,.15); } .ico-red { background:rgba(248,113,113,.15); }
+.ico-purple { background:rgba(167,139,250,.15); }
+
+/* ══════════════════════ PROFILE GRID ════════════════════════════════════ */
+.profile-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.profile-field { padding:14px 16px; background:var(--s2); border-radius:var(--r2); border:1px solid var(--b1); transition:all var(--tr); }
+.profile-field:hover { border-color:var(--b2); }
+.pf-label { font-size:10px; font-weight:700; color:var(--tx3); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:5px; }
+.pf-value { font-size:14px; font-weight:500; }
+.pf-empty { color:var(--tx3); font-style:italic; font-size:13px; }
+
+/* ══════════════════════ FORMS ════════════════════════════════════════════ */
+.fg { margin-bottom:14px; }
+.fl { display:block; font-size:10.5px; font-weight:700; color:var(--tx2); margin-bottom:5px; letter-spacing:.6px; text-transform:uppercase; }
+.fc {
+  width:100%; padding:10px 13px;
+  background:var(--s2); border:1.5px solid var(--b2);
+  border-radius:var(--r2); color:var(--tx);
+  font-family:inherit; font-size:14px;
+  transition:border-color var(--tr), box-shadow var(--tr); outline:none;
+}
+.fc:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,168,83,.12); }
+.fc::placeholder { color:var(--tx3); }
+select.fc option { background:var(--s2); }
+textarea.fc { resize:vertical; min-height:90px; }
+.fc.error { border-color:var(--red); }
+.fc.valid { border-color:var(--green); }
+.f-err { font-size:11.5px; color:var(--red); margin-top:4px; display:none; }
+.f-err.show { display:block; }
+.fr { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+.fr3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:13px; }
+.fcheck { display:flex; align-items:center; gap:8px; cursor:pointer; }
+.fcheck input { width:16px; height:16px; accent-color:var(--gold); cursor:pointer; }
+.fhint { font-size:11px; color:var(--tx3); margin-top:4px; }
+
+/* ══════════════════════ BUTTONS ══════════════════════════════════════════ */
+.btn { display:inline-flex; align-items:center; gap:7px; padding:10px 20px; border-radius:var(--r2); font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer; border:none; transition:all var(--tr); white-space:nowrap; }
+.btn-primary { background:var(--gG); color:#0b0e1a; box-shadow:0 4px 16px rgba(212,168,83,.3); }
+.btn-primary:hover { box-shadow:0 6px 24px rgba(212,168,83,.48); transform:translateY(-1px); }
+.btn-primary:active { transform:translateY(0); }
+.btn-sec { background:var(--s3); color:var(--tx); border:1px solid var(--b2); }
+.btn-sec:hover { background:var(--s4); }
+.btn-danger { background:rgba(248,113,113,.12); color:var(--red); border:1px solid rgba(248,113,113,.25); }
+.btn-danger:hover { background:rgba(248,113,113,.22); }
+.btn-ghost { background:none; border:none; color:var(--tx2); }
+.btn-ghost:hover { color:var(--tx); }
+.btn-sm { padding:7px 14px; font-size:12.5px; }
+.btn-xs { padding:4px 10px; font-size:11.5px; border-radius:6px; }
+.btn-full { width:100%; justify-content:center; }
+.btn-loading { pointer-events:none; opacity:.7; }
+.btn-loading::after { content:''; width:14px; height:14px; border:2px solid rgba(0,0,0,.3); border-top-color:#0b0e1a; border-radius:50%; animation:spin .7s linear infinite; margin-left:4px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ══════════════════════ BADGES ══════════════════════════════════════════ */
+.badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }
+.b-green { background:rgba(52,211,153,.14); color:var(--green); }
+.b-red { background:rgba(248,113,113,.14); color:var(--red); }
+.b-yellow { background:rgba(251,191,36,.14); color:var(--yellow); }
+.b-blue { background:rgba(79,142,247,.14); color:var(--blue); }
+.b-purple { background:rgba(167,139,250,.14); color:var(--purple); }
+.b-gold { background:rgba(212,168,83,.14); color:var(--gold); }
+.b-gray { background:rgba(139,149,176,.1); color:var(--tx2); }
+
+/* ══════════════════════ NOTICE CARDS ════════════════════════════════════ */
+.notice-list { display:flex; flex-direction:column; gap:12px; }
+.notice-item {
+  background:var(--s2); border:1px solid var(--b1);
+  border-radius:var(--r2); padding:16px 18px;
+  border-left:4px solid var(--b2);
+  transition:all var(--tr);
+  position:relative; overflow:hidden;
+}
+.notice-item:hover { border-color:var(--b2); transform:translateX(3px); }
+.notice-item.urgent { border-left-color:var(--red); }
+.notice-item.important { border-left-color:var(--yellow); }
+.notice-item.normal { border-left-color:var(--blue); }
+.notice-item.rule { border-left-color:var(--purple); }
+.notice-item.emergency { border-left-color:var(--red); }
+.ni-top { display:flex; align-items:flex-start; gap:10px; margin-bottom:8px; }
+.ni-ico { width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.ni-title { font-weight:600; font-size:14.5px; line-height:1.3; }
+.ni-meta { font-size:11.5px; color:var(--tx2); margin-top:3px; }
+.ni-body { font-size:13.5px; color:var(--tx2); line-height:1.65; }
+.ni-badges { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+
+/* ══════════════════════ DOCUMENT UPLOAD ════════════════════════════════ */
+.drop-zone {
+  border:2px dashed var(--b2); border-radius:var(--r2);
+  padding:36px 20px; text-align:center;
+  cursor:pointer; transition:all var(--tr);
+  background:var(--s2);
+}
+.drop-zone:hover, .drop-zone.drag { border-color:var(--gold); background:rgba(212,168,83,.06); }
+.drop-ico { font-size:40px; margin-bottom:10px; opacity:.5; }
+.drop-title { font-size:15px; font-weight:600; margin-bottom:4px; }
+.drop-sub { font-size:12.5px; color:var(--tx2); }
+.doc-list { display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+.doc-item { display:flex; align-items:center; gap:12px; background:var(--s2); border:1px solid var(--b1); border-radius:var(--r2); padding:12px 14px; transition:all var(--tr); }
+.doc-item:hover { border-color:var(--b2); }
+.doc-ico { width:40px; height:40px; border-radius:9px; background:rgba(79,142,247,.12); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.doc-info { flex:1; min-width:0; }
+.doc-name { font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.doc-meta { font-size:11.5px; color:var(--tx2); margin-top:2px; }
+.doc-acts { display:flex; gap:6px; }
+
+/* ══════════════════════ COMPLAINTS ═════════════════════════════════════ */
+.complaint-card { background:var(--s2); border:1px solid var(--b1); border-radius:var(--r2); padding:16px 18px; transition:all var(--tr); }
+.complaint-card:hover { border-color:var(--b2); }
+.cc-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:8px; }
+.cc-title { font-weight:600; font-size:14.5px; }
+.cc-desc { font-size:13px; color:var(--tx2); line-height:1.6; }
+.cc-meta { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; align-items:center; }
+.cc-badges { display:flex; gap:6px; }
+.timeline { position:relative; padding-left:22px; margin-top:14px; }
+.timeline::before { content:''; position:absolute; left:8px; top:4px; bottom:4px; width:2px; background:var(--b2); }
+.tl-item { position:relative; margin-bottom:14px; }
+.tl-dot { position:absolute; left:-18px; top:3px; width:11px; height:11px; border-radius:50%; background:var(--gold); border:2px solid var(--bg); }
+.tl-time { font-size:10.5px; color:var(--tx3); }
+.tl-txt { font-size:13px; margin-top:1px; }
+
+/* ══════════════════════ GUIDELINES ═════════════════════════════════════ */
+.rule-card {
+  background:var(--s2); border:1px solid var(--b1);
+  border-radius:var(--r2); padding:16px 18px;
+  display:flex; gap:14px; align-items:flex-start;
+  transition:all var(--tr);
+}
+.rule-card:hover { border-color:var(--b2); }
+.rule-num { width:32px; height:32px; border-radius:50%; background:var(--gG); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#0b0e1a; flex-shrink:0; }
+.rule-body h4 { font-weight:600; font-size:14px; margin-bottom:4px; }
+.rule-body p { font-size:13px; color:var(--tx2); line-height:1.6; }
+
+/* ══════════════════════ MODAL ═══════════════════════════════════════════ */
+.mo { position:fixed; inset:0; background:rgba(4,8,20,.8); z-index:500; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity .25s; backdrop-filter:blur(8px); }
+.mo.open { opacity:1; pointer-events:all; }
+.mo-box { background:var(--s1); border:1px solid var(--b2); border-radius:20px; width:100%; max-width:580px; max-height:90vh; overflow-y:auto; box-shadow:0 28px 72px rgba(0,0,0,.72); transform:scale(.95) translateY(16px); transition:transform .28s cubic-bezier(.34,1.2,.64,1); }
+.mo.open .mo-box { transform:scale(1) translateY(0); }
+.mo-hdr { padding:18px 22px; border-bottom:1px solid var(--b1); display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:var(--s1); z-index:1; border-radius:20px 20px 0 0; }
+.mo-title { font-family:'Playfair Display',serif; font-size:18px; font-weight:700; }
+.mo-close { width:30px; height:30px; border-radius:50%; background:var(--s2); border:none; color:var(--tx2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; transition:all var(--tr); }
+.mo-close:hover { background:var(--red); color:#fff; }
+.mo-body { padding:22px; }
+.mo-foot { padding:14px 22px; border-top:1px solid var(--b1); display:flex; justify-content:flex-end; gap:10px; }
+
+/* ══════════════════════ TOAST ═══════════════════════════════════════════ */
+.tw { position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+.toast { background:var(--s2); border:1px solid var(--b2); border-radius:var(--r2); padding:12px 16px; display:flex; align-items:center; gap:10px; box-shadow:var(--sh); min-width:260px; max-width:340px; pointer-events:all; animation:tIn .35s cubic-bezier(.34,1.56,.64,1); font-size:13.5px; }
+.toast.t-ok  { border-left:3.5px solid var(--green); }
+.toast.t-err { border-left:3.5px solid var(--red); }
+.toast.t-warn{ border-left:3.5px solid var(--yellow); }
+.toast.t-info{ border-left:3.5px solid var(--blue); }
+@keyframes tIn { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* ══════════════════════ SPINNER ═════════════════════════════════════════ */
+.spin-wrap { display:flex; align-items:center; justify-content:center; padding:48px; }
+.spinner { width:28px; height:28px; border:3px solid var(--s4); border-top-color:var(--gold); border-radius:50%; animation:spin .7s linear infinite; }
+
+/* ══════════════════════ EMPTY STATE ════════════════════════════════════ */
+.empty { text-align:center; padding:48px 20px; color:var(--tx3); }
+.empty-ico { font-size:52px; margin-bottom:14px; opacity:.28; }
+.empty h3 { font-family:'Playfair Display',serif; font-size:19px; color:var(--tx2); margin-bottom:6px; }
+.empty p { font-size:13.5px; }
+
+/* ══════════════════════ PROGRESS BAR ═══════════════════════════════════ */
+.prog { background:var(--s3); border-radius:4px; height:6px; overflow:hidden; }
+.prog-bar { height:100%; border-radius:4px; background:var(--gG); transition:width .6s ease; }
+
+/* ══════════════════════ DIVIDER ════════════════════════════════════════ */
+.div { height:1px; background:var(--b1); margin:16px 0; }
+
+/* ══════════════════════ SECTION TITLE ══════════════════════════════════ */
+.sec-label { font-size:11px; font-weight:700; color:var(--tx3); letter-spacing:2px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.sec-label::after { content:''; flex:1; height:1px; background:var(--b1); }
+
+/* ══════════════════════ MOBILE BOTTOM NAV ════════════════════════════  */
+.mob-nav { display:none; position:fixed; bottom:0; left:0; right:0; z-index:300; background:var(--glass); backdrop-filter:blur(18px); border-top:1px solid var(--b1); padding:8px 12px calc(8px + env(safe-area-inset-bottom)); }
+.mob-nav-items { display:flex; justify-content:space-around; }
+.mob-nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 4px; border-radius:var(--r3); cursor:pointer; border:none; background:none; color:var(--tx3); font-size:10.5px; font-weight:600; transition:all var(--tr); }
+.mob-nav-item:hover, .mob-nav-item.active { color:var(--gold); }
+.mob-nav-ico { font-size:20px; }
+
+/* ══════════════════════ UTILITY ════════════════════════════════════════ */
+.flex { display:flex; } .flex-col { flex-direction:column; } .items-c { align-items:center; } .just-b { justify-content:space-between; }
+.gap-1{gap:4px} .gap-2{gap:8px} .gap-3{gap:12px} .gap-4{gap:16px} .fw{flex-wrap:wrap} .f1{flex:1}
+.mt-2{margin-top:8px} .mt-3{margin-top:12px} .mt-4{margin-top:16px}
+.mb-2{margin-bottom:8px} .mb-3{margin-bottom:12px} .mb-4{margin-bottom:16px}
+.c-gold{color:var(--gold)} .c-green{color:var(--green)} .c-red{color:var(--red)} .c-muted{color:var(--tx2)} .c-dim{color:var(--tx3)}
+.tx-xs{font-size:11.5px} .tx-sm{font-size:13px} .fw-6{font-weight:600} .fw-7{font-weight:700}
+.font-s{font-family:'Playfair Display',serif} .w-full{width:100%} .hidden{display:none!important}
+.trunc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ══════════════════════ RESPONSIVE ═════════════════════════════════════ */
+@media(max-width:768px) {
+  .hdr-nav { display:none; }
+  .mob-nav { display:block; }
+  .mob-menu-btn { display:block; }
+  .hero-av { width:64px; height:64px; font-size:24px; }
+  .hero-stats { display:none; }
+  .profile-grid { grid-template-columns:1fr; }
+  .fr { grid-template-columns:1fr; }
+  .fr3 { grid-template-columns:1fr 1fr; }
+  .portal-wrap { padding:14px 14px 80px; }
+  .section-nav { display:none; }
+}
+@media(max-width:480px) { .fr3 { grid-template-columns:1fr; } .login-card { padding:28px 22px; } }
+</style>
+</head>
+<body>
+
+<!-- Background blobs -->
+<div class="bg-blobs">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+
+<!-- ═══════════════════════════ HEADER ═══════════════════════════════════ -->
+<header class="hdr" id="siteHdr">
+  <div class="hdr-logo">
+    <div class="hdr-logo-ico">🏠</div>
+    <div class="hdr-logo-txt">
+      <h1>PG Pro</h1>
+      <span>Tenant Portal</span>
+    </div>
+  </div>
+  <span class="hdr-tag" id="hdrTag">Welcome</span>
+  <div class="hdr-space"></div>
+  <nav class="hdr-nav" id="hdrNav">
+    <button class="hdr-nav-item active" data-sec="profile" onclick="switchSection('profile',this)">👤 Profile</button>
+    <button class="hdr-nav-item" data-sec="documents" onclick="switchSection('documents',this)">📁 Documents</button>
+    <button class="hdr-nav-item" data-sec="complaints" onclick="switchSection('complaints',this)">🔧 Complaints</button>
+    <button class="hdr-nav-item" data-sec="notices" onclick="switchSection('notices',this)">📢 Notices</button>
+    <button class="hdr-nav-item" data-sec="guidelines" onclick="switchSection('guidelines',this)">📋 Guidelines</button>
+  </nav>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="themeBtn">🌙</button>
+  <button class="btn btn-sec btn-sm hidden" id="logoutBtn" onclick="doLogout()">Sign Out</button>
+</header>
+
+<!-- ═══════════════════════════ LOGIN PAGE ════════════════════════════════ -->
+<div id="loginPage">
+  <div class="login-card">
+    <div class="lc-logo">
+      <div class="lc-logo-ico">🏠</div>
+      <h2>Tenant Portal</h2>
+      <p>Sign in to access your PG account</p>
+    </div>
+
+    <div class="step-dots">
+      <div class="dot active" id="dot1"></div>
+      <div class="dot" id="dot2"></div>
+    </div>
+
+    <!-- Step 1: Phone -->
+    <div id="step1">
+      <div class="fg">
+        <label class="fl">Your Phone Number</label>
+        <input type="tel" id="loginPhone" class="fc" placeholder="e.g. 9876543210" maxlength="15" oninput="validatePhone(this)" onkeydown="if(event.key==='Enter')findTenant()">
+        <div class="f-err" id="phoneErr">Please enter a valid phone number</div>
+      </div>
+      <button class="btn btn-primary btn-full mt-4" id="findBtn" onclick="findTenant()">
+        Find My Account →
+      </button>
+      <p class="tx-xs c-muted" style="text-align:center;margin-top:14px">Enter the phone number registered with your PG owner</p>
+    </div>
+
+    <!-- Step 2: Confirm Identity -->
+    <div id="step2" class="hidden">
+      <div id="foundTenantCard" style="background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:16px;margin-bottom:18px;display:flex;align-items:center;gap:13px">
+        <div id="ftAvatar" style="width:48px;height:48px;border-radius:12px;background:var(--gG);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#0b0e1a;flex-shrink:0"></div>
+        <div>
+          <div id="ftName" style="font-weight:600;font-size:15px"></div>
+          <div id="ftRoom" style="font-size:12px;color:var(--tx2);margin-top:2px"></div>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Confirm: Last 4 digits of phone</label>
+        <input type="number" id="confirmPin" class="fc" placeholder="e.g. 3210" maxlength="4" onkeydown="if(event.key==='Enter')confirmLogin()">
+        <div class="f-err" id="pinErr">Last 4 digits don't match</div>
+      </div>
+      <button class="btn btn-primary btn-full mt-3" onclick="confirmLogin()">Access My Portal →</button>
+      <button class="btn btn-ghost btn-full mt-2" onclick="backToStep1()" style="font-size:13px">← Use different number</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ PORTAL PAGE ══════════════════════════════ -->
+<div id="portalPage">
+  <div class="portal-wrap">
+
+    <!-- Hero Card -->
+    <div class="hero-card" id="heroCard">
+      <div class="hero-inner">
+        <div class="hero-av-wrap">
+          <div class="hero-av" id="heroAv">?</div>
+          <div class="hero-av-edit" onclick="openPhotoModal()" title="Change photo">✏️</div>
+        </div>
+        <div class="hero-info">
+          <div class="hero-name" id="heroName">Loading…</div>
+          <div class="hero-meta" id="heroMeta"></div>
+          <div class="hero-badges" id="heroBadges"></div>
+        </div>
+        <div class="hero-stats" id="heroStats"></div>
+      </div>
+      <!-- Profile completeness -->
+      <div style="margin-top:18px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span class="tx-xs c-muted">Profile completeness</span>
+          <span class="tx-xs fw-6 c-gold" id="profilePct">0%</span>
+        </div>
+        <div class="prog"><div class="prog-bar" id="profileBar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- Section Tabs (desktop) -->
+    <div class="section-nav">
+      <button class="sec-tab active" data-sec="profile" onclick="switchSection('profile',this)">
+        <span class="sec-tab-ico">👤</span><span class="sec-tab-lbl">Profile</span>
+      </button>
+      <button class="sec-tab" data-sec="documents" onclick="switchSection('documents',this)">
+        <span class="sec-tab-ico">📁</span><span class="sec-tab-lbl">Documents</span>
+      </button>
+      <button class="sec-tab" data-sec="complaints" onclick="switchSection('complaints',this)">
+        <span class="sec-tab-ico">🔧</span><span class="sec-tab-lbl">Complaints</span>
+      </button>
+      <button class="sec-tab" data-sec="notices" onclick="switchSection('notices',this)">
+        <span class="sec-tab-ico">📢</span><span class="sec-tab-lbl">Notices</span>
+      </button>
+      <button class="sec-tab" data-sec="guidelines" onclick="switchSection('guidelines',this)">
+        <span class="sec-tab-ico">📋</span><span class="sec-tab-lbl">Guidelines</span>
+      </button>
+    </div>
+
+    <!-- ── PROFILE SECTION ── -->
+    <div class="sec-panel active" id="sec-profile">
+      <div class="card" id="profileViewCard">
+        <div class="card-hdr">
+          <div class="card-title">
+            <div class="card-title-ico ico-gold">👤</div>
+            Personal Information
+          </div>
+          <button class="btn btn-sec btn-sm" onclick="openEditModal()">✏️ Edit Profile</button>
+        </div>
+        <div id="profileView"><div class="spin-wrap"><div class="spinner"></div></div></div>
+      </div>
+
+      <div class="card" id="paymentCard">
+        <div class="card-hdr">
+          <div class="card-title"><div class="card-title-ico ico-green">💳</div>Payment Summary</div>
+        </div>
+        <div id="paymentView"><div class="spin-wrap"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ── DOCUMENTS SECTION ── -->
+    <div class="sec-panel" id="sec-documents">
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title"><div class="card-title-ico ico-blue">📁</div>My Documents</div>
+          <button class="btn btn-primary btn-sm" onclick="openUploadModal()">+ Upload</button>
+        </div>
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+          <div class="drop-ico">📂</div>
+          <div class="drop-title">Drop files here or click to browse</div>
+          <div class="drop-sub">Supports: Images, PDF, Word — Max 5MB each</div>
+          <input type="file" id="fileInput" class="hidden" accept="image/*,.pdf,.doc,.docx" onchange="handleFileSelect(this)">
+        </div>
+        <div class="doc-list" id="docList"><div class="spin-wrap"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ── COMPLAINTS SECTION ── -->
+    <div class="sec-panel" id="sec-complaints">
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title"><div class="card-title-ico ico-red">🔧</div>My Complaints</div>
+          <button class="btn btn-primary btn-sm" onclick="openComplaintModal()">+ New Complaint</button>
+        </div>
+        <div id="complaintList"><div class="spin-wrap"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ── NOTICES SECTION ── -->
+    <div class="sec-panel" id="sec-notices">
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title"><div class="card-title-ico ico-gold">📢</div>Notices & Announcements</div>
+          <span class="tx-xs c-muted">From your PG owner</span>
+        </div>
+        <div class="notice-list" id="noticeList"><div class="spin-wrap"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ── GUIDELINES SECTION ── -->
+    <div class="sec-panel" id="sec-guidelines">
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-hdr">
+          <div class="card-title"><div class="card-title-ico ico-purple">📋</div>PG Rules & Guidelines</div>
+        </div>
+        <div class="alert-info" style="background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.18);border-radius:var(--r2);padding:12px 15px;font-size:13px;color:var(--blue2);margin-bottom:16px">
+          📌 Please read and follow all rules. Violations may result in warnings or penalties.
+        </div>
+        <div id="guidelinesList"></div>
+      </div>
+
+      <!-- Rules from notices -->
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title"><div class="card-title-ico ico-red">📢</div>Owner's Rule Notices</div>
+        </div>
+        <div id="ruleNoticeList"><div class="spin-wrap"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+  </div><!-- /portal-wrap -->
+</div><!-- /portalPage -->
+
+<!-- ═══════════════════════ MOBILE BOTTOM NAV ════════════════════════════ -->
+<nav class="mob-nav" id="mobNav">
+  <div class="mob-nav-items">
+    <button class="mob-nav-item active" data-sec="profile" onclick="switchSection('profile',this)"><span class="mob-nav-ico">👤</span>Profile</button>
+    <button class="mob-nav-item" data-sec="documents" onclick="switchSection('documents',this)"><span class="mob-nav-ico">📁</span>Documents</button>
+    <button class="mob-nav-item" data-sec="complaints" onclick="switchSection('complaints',this)"><span class="mob-nav-ico">🔧</span>Complaints</button>
+    <button class="mob-nav-item" data-sec="notices" onclick="switchSection('notices',this)"><span class="mob-nav-ico">📢</span>Notices</button>
+    <button class="mob-nav-item" data-sec="guidelines" onclick="switchSection('guidelines',this)"><span class="mob-nav-ico">📋</span>Rules</button>
+  </div>
+</nav>
+
+<!-- ═══════════════════════ MODALS ════════════════════════════════════════ -->
+
+<!-- Edit Profile Modal -->
+<div class="mo" id="editModal">
+  <div class="mo-box">
+    <div class="mo-hdr">
+      <span class="mo-title">Edit My Profile</span>
+      <button class="mo-close" onclick="closeModal('editModal')">✕</button>
+    </div>
+    <div class="mo-body">
+      <div class="tabs" style="display:flex;gap:3px;background:var(--s2);padding:4px;border-radius:var(--r2);margin-bottom:16px">
+        <button class="tab-btn active" onclick="switchTab('tab-basic',this)" style="flex:1;padding:7px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--s3);color:var(--tx);transition:all var(--tr)">📋 Basic</button>
+        <button class="tab-btn" onclick="switchTab('tab-personal',this)" style="flex:1;padding:7px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--tx2);transition:all var(--tr)">🏠 Address</button>
+        <button class="tab-btn" onclick="switchTab('tab-emergency',this)" style="flex:1;padding:7px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--tx2);transition:all var(--tr)">🆘 Emergency</button>
+      </div>
+
+      <div id="tab-basic">
+        <div class="fr">
+          <div class="fg"><label class="fl">Full Name *</label><input type="text" id="eName" class="fc" placeholder="Your full name"><div class="f-err" id="eNameErr">Required</div></div>
+          <div class="fg"><label class="fl">Phone *</label><input type="tel" id="ePhone" class="fc" placeholder="+91 9876543210" disabled style="opacity:.55"><div class="fhint">Contact owner to change phone</div></div>
+        </div>
+        <div class="fg"><label class="fl">Email</label><input type="email" id="eEmail" class="fc" placeholder="your@email.com"><div class="f-err" id="eEmailErr">Enter valid email</div></div>
+        <div class="fr">
+          <div class="fg"><label class="fl">Alternate Phone</label><input type="tel" id="eAltPhone" class="fc" placeholder="+91 8888888888"></div>
+          <div class="fg"><label class="fl">Occupation</label>
+            <select id="eOccupation" class="fc">
+              <option value="">Select</option>
+              <option value="Student">Student</option>
+              <option value="Working Professional">Working Professional</option>
+              <option value="Self-Employed">Self-Employed</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg"><label class="fl">College / Company</label><input type="text" id="eOrg" class="fc" placeholder="Your institution or company name"></div>
+      </div>
+
+      <div id="tab-personal" class="hidden">
+        <div class="fg"><label class="fl">Permanent Address</label><textarea id="ePermAddr" class="fc" placeholder="Your permanent home address" style="min-height:70px"></textarea></div>
+        <div class="fr3">
+          <div class="fg"><label class="fl">City</label><input type="text" id="eCity" class="fc" placeholder="City"></div>
+          <div class="fg"><label class="fl">State</label><input type="text" id="eState" class="fc" placeholder="State"></div>
+          <div class="fg"><label class="fl">Pincode</label><input type="text" id="ePincode" class="fc" placeholder="000000" maxlength="6"></div>
+        </div>
+      </div>
+
+      <div id="tab-emergency" class="hidden">
+        <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.18);border-radius:var(--r2);padding:12px 14px;font-size:13px;color:var(--red);margin-bottom:14px">
+          🆘 In case of emergency, this person will be contacted.
+        </div>
+        <div class="fr">
+          <div class="fg"><label class="fl">Contact Name</label><input type="text" id="eEcName" class="fc" placeholder="Parent or guardian name"></div>
+          <div class="fg"><label class="fl">Relationship</label><input type="text" id="eEcRelation" class="fc" placeholder="Father, Mother, Friend…"></div>
+        </div>
+        <div class="fg"><label class="fl">Emergency Phone *</label><input type="tel" id="eEcPhone" class="fc" placeholder="+91 7777777777"></div>
+      </div>
+    </div>
+    <div class="mo-foot">
+      <button class="btn btn-sec" onclick="closeModal('editModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveProfileBtn" onclick="saveProfile()">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Document Modal -->
+<div class="mo" id="uploadModal">
+  <div class="mo-box">
+    <div class="mo-hdr">
+      <span class="mo-title">Upload Document</span>
+      <button class="mo-close" onclick="closeModal('uploadModal')">✕</button>
+    </div>
+    <div class="mo-body">
+      <div class="fr">
+        <div class="fg"><label class="fl">Document Name *</label><input type="text" id="dName" class="fc" placeholder="e.g. Aadhar Card"><div class="f-err" id="dNameErr">Required</div></div>
+        <div class="fg"><label class="fl">Document Type</label>
+          <select id="dType" class="fc">
+            <option value="id_proof">🪪 ID Proof</option>
+            <option value="agreement">📝 Agreement</option>
+            <option value="photo">📷 Photo</option>
+            <option value="receipt">🧾 Receipt</option>
+            <option value="other">📄 Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Select File *</label>
+        <div class="drop-zone" id="modalDropZone" onclick="document.getElementById('modalFileInput').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropModalFile(event)" style="padding:24px">
+          <div class="drop-ico" style="font-size:30px">📎</div>
+          <div class="drop-title" style="font-size:14px">Click or drag file here</div>
+          <div class="drop-sub">Images, PDF, Word — Max 5MB</div>
+        </div>
+        <input type="file" id="modalFileInput" class="hidden" accept="image/*,.pdf,.doc,.docx" onchange="handleModalFile(this)">
+        <div id="selectedFileInfo" class="hidden" style="margin-top:10px;padding:10px 13px;background:var(--s2);border-radius:var(--r2);font-size:13px;display:flex;align-items:center;gap:8px">
+          <span id="selFileIco">📄</span>
+          <span id="selFileName" class="f1 trunc"></span>
+          <span id="selFileSize" class="c-muted tx-xs"></span>
+          <button class="btn btn-ghost" style="font-size:14px;padding:2px" onclick="clearModalFile()">✕</button>
+        </div>
+        <div class="f-err" id="dFileErr">Please select a file</div>
+      </div>
+    </div>
+    <div class="mo-foot">
+      <button class="btn btn-sec" onclick="closeModal('uploadModal')">Cancel</button>
+      <button class="btn btn-primary" id="uploadBtn" onclick="uploadDocument()">📤 Upload Document</button>
+    </div>
+  </div>
+</div>
+
+<!-- Complaint Modal -->
+<div class="mo" id="complaintModal">
+  <div class="mo-box">
+    <div class="mo-hdr">
+      <span class="mo-title">Submit Complaint</span>
+      <button class="mo-close" onclick="closeModal('complaintModal')">✕</button>
+    </div>
+    <div class="mo-body">
+      <div class="fg"><label class="fl">Complaint Title *</label><input type="text" id="cTitle" class="fc" placeholder="Brief title of the issue"><div class="f-err" id="cTitleErr">Please enter a title</div></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Category</label>
+          <select id="cCategory" class="fc">
+            <option value="plumbing">🔩 Plumbing</option>
+            <option value="electrical">⚡ Electrical</option>
+            <option value="furniture">🪑 Furniture</option>
+            <option value="cleaning">🧹 Cleaning</option>
+            <option value="security">🔐 Security</option>
+            <option value="internet">📶 Internet / Wi-Fi</option>
+            <option value="other">📋 Other</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Priority</label>
+          <select id="cPriority" class="fc">
+            <option value="low">🟢 Low</option>
+            <option value="medium" selected>🟡 Medium</option>
+            <option value="high">🟠 High</option>
+            <option value="urgent">🔴 Urgent</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Description *</label><textarea id="cDesc" class="fc" placeholder="Describe the issue in detail — when it started, what exactly is the problem, how it's affecting you…" style="min-height:110px"></textarea><div class="f-err" id="cDescErr">Please describe the issue</div></div>
+    </div>
+    <div class="mo-foot">
+      <button class="btn btn-sec" onclick="closeModal('complaintModal')">Cancel</button>
+      <button class="btn btn-primary" id="submitComplaintBtn" onclick="submitComplaint()">📨 Submit Complaint</button>
+    </div>
+  </div>
+</div>
+
+<!-- Photo Modal -->
+<div class="mo" id="photoModal">
+  <div class="mo-box" style="max-width:420px">
+    <div class="mo-hdr">
+      <span class="mo-title">Update Profile Photo</span>
+      <button class="mo-close" onclick="closeModal('photoModal')">✕</button>
+    </div>
+    <div class="mo-body">
+      <div style="text-align:center;margin-bottom:18px">
+        <div id="photoPreviewWrap" style="width:100px;height:100px;border-radius:20px;background:var(--gG);display:inline-flex;align-items:center;justify-content:center;font-size:38px;color:#0b0e1a;overflow:hidden">
+          <span id="photoPreviewIco">📷</span>
+          <img id="photoPreviewImg" class="hidden" style="width:100%;height:100%;object-fit:cover">
+        </div>
+      </div>
+      <div class="drop-zone" onclick="document.getElementById('photoInput').click()" style="padding:20px">
+        <div class="drop-ico" style="font-size:28px">📷</div>
+        <div class="drop-title" style="font-size:13px">Click to select photo</div>
+        <div class="drop-sub">JPEG, PNG — Max 2MB</div>
+      </div>
+      <input type="file" id="photoInput" class="hidden" accept="image/*" onchange="previewPhoto(this)">
+    </div>
+    <div class="mo-foot">
+      <button class="btn btn-sec" onclick="closeModal('photoModal')">Cancel</button>
+      <button class="btn btn-primary" id="savePhotoBtn" onclick="savePhoto()">💾 Save Photo</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="tw" id="toastWrap"></div>
+
+<!-- ═══════════════════════════ SCRIPTS ════════════════════════════════════ -->
+<script>
+/* ════════════════════════════════════════════════════════════════════════════
+   CONFIG
+════════════════════════════════════════════════════════════════════════════ */
+const API = '/api';
+let tenantData  = null;
+let currentFile = null;
+let photoBase64 = null;
+
+/* ════════════════════════════════════════════════════════════════════════════
+   THEME
+════════════════════════════════════════════════════════════════════════════ */
+const savedTheme = localStorage.getItem('pg_theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.getElementById('themeBtn').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+function toggleTheme() {
+  const cur  = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('pg_theme', next);
+  document.getElementById('themeBtn').textContent = next === 'dark' ? '🌙' : '☀️';
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════════════════════════════════ */
+function toast(msg, type = 'info', dur = 3500) {
+  const icons = { ok:'✓', err:'✕', warn:'⚠', info:'ℹ' };
+  const wrap  = document.getElementById('toastWrap');
+  const t     = document.createElement('div');
+  t.className = `toast t-${type}`;
+  t.innerHTML = `<span class="t-ico">${icons[type]||'ℹ'}</span><span class="f1" style="line-height:1.4">${msg}</span><button class="t-x" onclick="this.parentElement.remove()">✕</button>`;
+  wrap.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(110%)'; t.style.transition='.3s'; setTimeout(()=>t.remove(),300); }, dur);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   API HELPER
+════════════════════════════════════════════════════════════════════════════ */
+async function api(method, path, body = null) {
+  const token = localStorage.getItem('pt_token');
+  const opts  = { method, headers: {'Content-Type':'application/json'} };
+  if (token) opts.headers['Authorization'] = `Bearer ${token}`;
+  if (body)  opts.body = JSON.stringify(body);
+  const res  = await fetch(API + path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+  return data;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MODAL HELPERS
+════════════════════════════════════════════════════════════════════════════ */
+function openModal(id)  { document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+document.addEventListener('click', e => { if (e.target.classList.contains('mo')) { e.target.classList.remove('open'); document.body.style.overflow=''; } });
+
+/* ════════════════════════════════════════════════════════════════════════════
+   TAB HELPERS (inside modals)
+════════════════════════════════════════════════════════════════════════════ */
+const tabStyle = { active: 'background:var(--s3);color:var(--tx)', inactive: 'background:none;color:var(--tx2)' };
+function switchTab(tabId, btn) {
+  const allTabs = btn.parentElement.parentElement.querySelectorAll('[id^="tab-"]');
+  allTabs.forEach(t => t.classList.add('hidden'));
+  document.getElementById(tabId).classList.remove('hidden');
+  btn.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('style', 'flex:1;padding:7px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;'+tabStyle.inactive+';transition:all var(--tr)'));
+  btn.setAttribute('style', 'flex:1;padding:7px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;'+tabStyle.active+';transition:all var(--tr)');
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════════════════════════════════════════════ */
+function switchSection(sec, btnEl) {
+  document.querySelectorAll('.sec-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('sec-' + sec)?.classList.add('active');
+
+  document.querySelectorAll('.sec-tab, .hdr-nav-item, .mob-nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll(`[data-sec="${sec}"]`).forEach(b => b.classList.add('active'));
+
+  // Lazy load data
+  if (sec === 'documents')  loadDocuments();
+  if (sec === 'complaints') loadComplaints();
+  if (sec === 'notices')    loadNotices();
+  if (sec === 'guidelines') loadGuidelines();
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════════════════════════════════════════ */
+function initials(name) { return (name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2); }
+function fmtDate(d)     { return d ? new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—'; }
+function fmtCur(n)      { return '₹' + Number(n||0).toLocaleString('en-IN'); }
+function timeAgo(d)     {
+  const diff = Date.now() - new Date(d); const m = Math.floor(diff/60000); const h = Math.floor(diff/3600000); const dy = Math.floor(diff/86400000);
+  return m < 60 ? `${m}m ago` : h < 24 ? `${h}h ago` : `${dy}d ago`;
+}
+function statusBadge(s) {
+  const map = { active:'b-green', paid:'b-green', resolved:'b-green', open:'b-yellow', pending:'b-yellow', in_progress:'b-blue', overdue:'b-red', urgent:'b-red', vacated:'b-gray', disciplined:'b-green', mischief:'b-red', moderate:'b-blue', low:'b-gray', medium:'b-yellow', high:'b-red', closed:'b-gray' };
+  return `<span class="badge ${map[s]||'b-gray'}">${(s||'').replace(/_/g,' ')}</span>`;
+}
+function catIcon(cat)   { return {plumbing:'🔩',electrical:'⚡',furniture:'🪑',cleaning:'🧹',security:'🔐',internet:'📶',other:'📋'}[cat]||'📋'; }
+function priorityColor(p){ return {urgent:'var(--red)',high:'var(--yellow)',medium:'var(--blue)',low:'var(--tx3)'}[p]||'var(--tx3)'; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   VALIDATION
+════════════════════════════════════════════════════════════════════════════ */
+function validatePhone(input) {
+  const v = input.value.replace(/\D/g,'');
+  const ok = v.length >= 10;
+  input.classList.toggle('valid', ok);
+  input.classList.toggle('error', !ok && v.length > 0);
+  document.getElementById('phoneErr').classList.toggle('show', !ok && v.length > 0);
+  return ok;
+}
+
+function validateField(id, errId, check) {
+  const el  = document.getElementById(id);
+  const err = document.getElementById(errId);
+  const ok  = check(el.value);
+  el.classList.toggle('valid', ok);
+  el.classList.toggle('error', !ok);
+  if (err) err.classList.toggle('show', !ok);
+  return ok;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LOGIN FLOW
+════════════════════════════════════════════════════════════════════════════ */
+let foundTenant = null;
+
+async function findTenant() {
+  const phone = document.getElementById('loginPhone').value.trim();
+  if (!validatePhone(document.getElementById('loginPhone'))) return;
+
+  const btn = document.getElementById('findBtn');
+  btn.classList.add('btn-loading'); btn.textContent = 'Searching…';
+
+  try {
+    const results = await api('GET', `/tenants?search=${encodeURIComponent(phone)}`);
+    const tenant  = results.find(t => t.phone.replace(/\D/g,'').includes(phone.replace(/\D/g,'')));
+
+    if (!tenant) {
+      toast('No account found with this number. Contact your PG owner.', 'err', 5000);
+      return;
+    }
+
+    foundTenant = tenant;
+    document.getElementById('ftAvatar').textContent = initials(tenant.name);
+    document.getElementById('ftName').textContent   = tenant.name;
+    document.getElementById('ftRoom').textContent   = `${tenant.building?.name || '—'} · Room ${tenant.room?.roomNumber || '—'}`;
+
+    document.getElementById('step1').classList.add('hidden');
+    document.getElementById('step2').classList.remove('hidden');
+    document.getElementById('dot1').classList.remove('active'); document.getElementById('dot1').classList.add('done');
+    document.getElementById('dot2').classList.add('active');
+    document.getElementById('confirmPin').focus();
+
+  } catch (err) {
+    toast('Error: ' + err.message, 'err');
+  } finally {
+    btn.classList.remove('btn-loading'); btn.textContent = 'Find My Account →';
+  }
+}
+
+function confirmLogin() {
+  const pin   = document.getElementById('confirmPin').value;
+  const phone = foundTenant.phone.replace(/\D/g,'');
+  if (pin.length < 4 || !phone.endsWith(pin)) {
+    document.getElementById('pinErr').classList.add('show');
+    document.getElementById('confirmPin').classList.add('error');
+    return;
+  }
+  document.getElementById('pinErr').classList.remove('show');
+  // Store tenant session (simple – no real auth needed for tenant view)
+  localStorage.setItem('pt_tenant', JSON.stringify(foundTenant));
+  startPortal(foundTenant);
+}
+
+function backToStep1() {
+  document.getElementById('step2').classList.add('hidden');
+  document.getElementById('step1').classList.remove('hidden');
+  document.getElementById('dot2').classList.remove('active');
+  document.getElementById('dot1').classList.remove('done'); document.getElementById('dot1').classList.add('active');
+  foundTenant = null;
+}
+
+async function startPortal(tenant) {
+  tenantData = tenant;
+  document.getElementById('loginPage').style.display  = 'none';
+  document.getElementById('portalPage').style.display = 'block';
+  document.getElementById('mobNav').style.display     = 'block';
+  document.getElementById('hdrTag').textContent       = `Hi, ${tenant.name.split(' ')[0]} 👋`;
+  document.getElementById('logoutBtn').classList.remove('hidden');
+
+  // Load full tenant data with payments
+  try {
+    const full = await api('GET', `/tenants/${tenant._id}`);
+    tenantData = full;
+  } catch(e) { /* use cached */ }
+
+  renderHero();
+  renderProfile();
+  renderPayments();
+  loadNotices(); // preload notices
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   HERO
+════════════════════════════════════════════════════════════════════════════ */
+function renderHero() {
+  const t = tenantData;
+  // Avatar
+  const av = document.getElementById('heroAv');
+  if (t.photo) { av.innerHTML = `<img src="${t.photo}" alt="${t.name}" style="width:100%;height:100%;object-fit:cover">`; }
+  else { av.textContent = initials(t.name); }
+
+  document.getElementById('heroName').textContent = t.name;
+  document.getElementById('heroMeta').innerHTML = `
+    <span class="hero-meta-item">📱 ${t.phone}</span>
+    ${t.email ? `<span class="hero-meta-item">✉️ ${t.email}</span>` : ''}
+    ${t.building?.name ? `<span class="hero-meta-item">🏢 ${t.building.name}</span>` : ''}
+    ${t.room?.roomNumber ? `<span class="hero-meta-item">🚪 Room ${t.room.roomNumber}, Floor ${t.room.floor||1}</span>` : ''}
+    <span class="hero-meta-item">📅 Since ${fmtDate(t.joiningDate)}</span>
+  `;
+  document.getElementById('heroBadges').innerHTML =
+    statusBadge(t.status) + statusBadge(t.behavior) +
+    (t.idVerified ? '<span class="badge b-green">✓ ID Verified</span>' : '<span class="badge b-gray">✗ ID Not Verified</span>');
+
+  document.getElementById('heroStats').innerHTML = `
+    <div class="hero-stat">
+      <div class="hero-stat-val c-gold">${fmtCur(t.monthlyRent)}</div>
+      <div class="hero-stat-lbl">Monthly Rent</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val c-green">${fmtCur(t.depositAmount)}</div>
+      <div class="hero-stat-lbl">Deposit Paid</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val">${t.bedNumber || '—'}</div>
+      <div class="hero-stat-lbl">Bed No.</div>
+    </div>
+  `;
+
+  // Profile completeness
+  const fields = ['name','phone','email','occupation','address.permanent','emergencyContact.name','emergencyContact.phone','idType','idNumber'];
+  let filled = 0;
+  fields.forEach(f => {
+    const val = f.includes('.') ? (t[f.split('.')[0]]?.[f.split('.')[1]]) : t[f];
+    if (val) filled++;
+  });
+  if (t.photo) filled++;
+  const pct = Math.round((filled / (fields.length + 1)) * 100);
+  document.getElementById('profilePct').textContent = pct + '%';
+  document.getElementById('profileBar').style.width  = pct + '%';
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PROFILE VIEW
+════════════════════════════════════════════════════════════════════════════ */
+function renderProfile() {
+  const t = tenantData;
+  const field = (label, val) => `
+    <div class="profile-field">
+      <div class="pf-label">${label}</div>
+      <div class="${val ? 'pf-value' : 'pf-empty'}">${val || 'Not provided'}</div>
+    </div>`;
+
+  document.getElementById('profileView').innerHTML = `
+    <div class="sec-label">Contact & Stay</div>
+    <div class="profile-grid">
+      ${field('Phone', t.phone)}
+      ${field('Email', t.email)}
+      ${field('Alternate Phone', t.alternatePhone)}
+      ${field('Joining Date', fmtDate(t.joiningDate))}
+      ${field('Building', t.building?.name)}
+      ${field('Room', t.room ? `Room ${t.room.roomNumber}, Floor ${t.room.floor}` : null)}
+      ${field('Bed Number', t.bedNumber)}
+      ${field('Status', t.status?.replace(/_/g,' '))}
+    </div>
+    <div class="div"></div>
+    <div class="sec-label">Identity</div>
+    <div class="profile-grid">
+      ${field('Occupation', t.occupation)}
+      ${field('College / Company', t.college || t.company)}
+      ${field('ID Type', t.idType?.replace(/_/g,' '))}
+      ${field('ID Number', t.idNumber ? '••••' + t.idNumber.slice(-4) : null)}
+      ${field('ID Verified', t.idVerified ? '✅ Yes — Verified' : '❌ Not yet verified')}
+    </div>
+    ${t.emergencyContact?.name ? `
+    <div class="div"></div>
+    <div class="sec-label">Emergency Contact</div>
+    <div class="profile-grid">
+      ${field('Name', t.emergencyContact.name)}
+      ${field('Phone', t.emergencyContact.phone)}
+      ${field('Relationship', t.emergencyContact.relation)}
+    </div>` : ''}
+    ${t.address?.permanent ? `
+    <div class="div"></div>
+    <div class="sec-label">Home Address</div>
+    <div class="profile-grid">
+      ${field('Permanent Address', t.address.permanent)}
+      ${field('City', t.address.city)}
+      ${field('State', t.address.state)}
+      ${field('Pincode', t.address.pincode)}
+    </div>` : ''}
+  `;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PAYMENTS VIEW
+════════════════════════════════════════════════════════════════════════════ */
+function renderPayments() {
+  const payments = tenantData.payments || [];
+  const paid     = payments.filter(p => p.status === 'paid' && p.type === 'rent');
+  const pending  = payments.filter(p => p.status !== 'paid' && p.type === 'rent');
+
+  document.getElementById('paymentView').innerHTML = `
+    <div class="profile-grid" style="margin-bottom:16px">
+      <div class="profile-field" style="border-color:rgba(52,211,153,.25)">
+        <div class="pf-label">Paid This Year</div>
+        <div class="pf-value c-green fw-7 font-s" style="font-size:22px">${fmtCur(paid.reduce((s,p)=>s+p.amount,0))}</div>
+      </div>
+      <div class="profile-field" style="border-color:rgba(248,113,113,.25)">
+        <div class="pf-label">Pending Dues</div>
+        <div class="pf-value c-red fw-7 font-s" style="font-size:22px">${fmtCur(pending.reduce((s,p)=>s+p.amount,0))}</div>
+      </div>
+    </div>
+    ${payments.length ? `
+    <div class="sec-label">Recent Payments</div>
+    <div style="overflow-x:auto;border-radius:var(--r2);border:1px solid var(--b1)">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--s2)">
+          <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:700;color:var(--tx2);letter-spacing:1.2px;text-transform:uppercase;border-bottom:1px solid var(--b1)">Month</th>
+          <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:700;color:var(--tx2);letter-spacing:1.2px;text-transform:uppercase;border-bottom:1px solid var(--b1)">Type</th>
+          <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:700;color:var(--tx2);letter-spacing:1.2px;text-transform:uppercase;border-bottom:1px solid var(--b1)">Amount</th>
+          <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:700;color:var(--tx2);letter-spacing:1.2px;text-transform:uppercase;border-bottom:1px solid var(--b1)">Status</th>
+          <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:700;color:var(--tx2);letter-spacing:1.2px;text-transform:uppercase;border-bottom:1px solid var(--b1)">Paid On</th>
+        </tr></thead>
+        <tbody>
+          ${payments.map(p => `<tr>
+            <td style="padding:11px 13px;font-size:13px;border-bottom:1px solid var(--b1)">${months()[p.month-1]||'—'} ${p.year||''}</td>
+            <td style="padding:11px 13px;font-size:13px;border-bottom:1px solid var(--b1)">${p.type}</td>
+            <td style="padding:11px 13px;font-size:13px;border-bottom:1px solid var(--b1);font-family:'Playfair Display',serif;font-weight:700">${fmtCur(p.amount)}</td>
+            <td style="padding:11px 13px;border-bottom:1px solid var(--b1)">${statusBadge(p.status)}</td>
+            <td style="padding:11px 13px;font-size:13px;border-bottom:1px solid var(--b1);color:var(--tx2)">${p.paidOn ? fmtDate(p.paidOn) : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>` : `<div class="empty" style="padding:24px"><div class="empty-ico" style="font-size:32px">💳</div><p>No payment records yet</p></div>`}
+  `;
+}
+function months() { return ['January','February','March','April','May','June','July','August','September','October','November','December']; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   EDIT PROFILE MODAL
+════════════════════════════════════════════════════════════════════════════ */
+function openEditModal() {
+  const t = tenantData;
+  document.getElementById('eName').value      = t.name || '';
+  document.getElementById('ePhone').value     = t.phone || '';
+  document.getElementById('eEmail').value     = t.email || '';
+  document.getElementById('eAltPhone').value  = t.alternatePhone || '';
+  document.getElementById('eOccupation').value= t.occupation || '';
+  document.getElementById('eOrg').value       = t.college || t.company || '';
+  document.getElementById('ePermAddr').value  = t.address?.permanent || '';
+  document.getElementById('eCity').value      = t.address?.city || '';
+  document.getElementById('eState').value     = t.address?.state || '';
+  document.getElementById('ePincode').value   = t.address?.pincode || '';
+  document.getElementById('eEcName').value    = t.emergencyContact?.name || '';
+  document.getElementById('eEcRelation').value= t.emergencyContact?.relation || '';
+  document.getElementById('eEcPhone').value   = t.emergencyContact?.phone || '';
+  openModal('editModal');
+}
+
+async function saveProfile() {
+  const nameOk  = validateField('eName', 'eNameErr', v => v.trim().length >= 2);
+  const emailOk = validateField('eEmail', 'eEmailErr', v => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+  if (!nameOk || !emailOk) { toast('Please fix the errors above', 'warn'); return; }
+
+  const occ = document.getElementById('eOccupation').value;
+  const org = document.getElementById('eOrg').value;
+  const data = {
+    name:  document.getElementById('eName').value.trim(),
+    email: document.getElementById('eEmail').value.trim(),
+    alternatePhone: document.getElementById('eAltPhone').value.trim(),
+    occupation: occ,
+    college: occ === 'Student' ? org : '',
+    company: occ !== 'Student' ? org : '',
+    address: {
+      permanent: document.getElementById('ePermAddr').value.trim(),
+      city:      document.getElementById('eCity').value.trim(),
+      state:     document.getElementById('eState').value.trim(),
+      pincode:   document.getElementById('ePincode').value.trim(),
+    },
+    emergencyContact: {
+      name:     document.getElementById('eEcName').value.trim(),
+      relation: document.getElementById('eEcRelation').value.trim(),
+      phone:    document.getElementById('eEcPhone').value.trim(),
+    }
+  };
+
+  const btn = document.getElementById('saveProfileBtn');
+  btn.classList.add('btn-loading'); btn.textContent = 'Saving…';
+  try {
+    const updated = await api('PUT', `/tenants/${tenantData._id}`, data);
+    tenantData = { ...tenantData, ...updated };
+    localStorage.setItem('pt_tenant', JSON.stringify(tenantData));
+    renderHero();
+    renderProfile();
+    closeModal('editModal');
+    toast('Profile updated successfully!', 'ok');
+  } catch (err) {
+    toast('Error: ' + err.message, 'err');
+  } finally {
+    btn.classList.remove('btn-loading'); btn.textContent = '💾 Save Changes';
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PHOTO
+════════════════════════════════════════════════════════════════════════════ */
+function openPhotoModal() { openModal('photoModal'); }
+
+function previewPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { toast('Photo must be under 2MB', 'warn'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    photoBase64 = e.target.result;
+    document.getElementById('photoPreviewIco').classList.add('hidden');
+    const img = document.getElementById('photoPreviewImg');
+    img.src = e.target.result;
+    img.classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function savePhoto() {
+  if (!photoBase64) { toast('Please select a photo first', 'warn'); return; }
+  const btn = document.getElementById('savePhotoBtn');
+  btn.classList.add('btn-loading'); btn.textContent = 'Saving…';
+  try {
+    await api('PUT', `/tenants/${tenantData._id}`, { photo: photoBase64 });
+    tenantData.photo = photoBase64;
+    const av = document.getElementById('heroAv');
+    av.innerHTML = `<img src="${photoBase64}" style="width:100%;height:100%;object-fit:cover">`;
+    closeModal('photoModal');
+    toast('Photo updated!', 'ok');
+    photoBase64 = null;
+  } catch (err) {
+    toast('Error: ' + err.message, 'err');
+  } finally {
+    btn.classList.remove('btn-loading'); btn.textContent = '💾 Save Photo';
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   DOCUMENTS
+════════════════════════════════════════════════════════════════════════════ */
+async function loadDocuments() {
+  document.getElementById('docList').innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+  try {
+    const docs = await api('GET', `/documents?tenant=${tenantData._id}`);
+    renderDocList(docs);
+  } catch (err) {
+    document.getElementById('docList').innerHTML = `<div class="empty"><div class="empty-ico">📁</div><h3>Could not load documents</h3><p>${err.message}</p></div>`;
+  }
+}
+
+function renderDocList(docs) {
+  const el = document.getElementById('docList');
+  if (!docs.length) {
+    el.innerHTML = `<div class="empty" style="padding:28px"><div class="empty-ico">📂</div><h3>No documents yet</h3><p>Upload your ID proof, agreement, or other documents here</p></div>`;
+    return;
+  }
+  const typeIcons = { id_proof:'🪪', agreement:'📝', photo:'📷', receipt:'🧾', other:'📄' };
+  el.innerHTML = docs.map(d => `
+    <div class="doc-item">
+      <div class="doc-ico">${typeIcons[d.type]||'📄'}</div>
+      <div class="doc-info">
+        <div class="doc-name">${d.name}</div>
+        <div class="doc-meta">${d.type.replace('_',' ')} · Uploaded ${fmtDate(d.createdAt)}</div>
+      </div>
+      <div class="doc-acts">
+        ${d.hasFile ? `<button class="btn btn-xs btn-blue" onclick="downloadDoc('${d._id}','${d.name}')">⬇ Download</button>` : ''}
+        <button class="btn btn-xs btn-danger" onclick="deleteDoc('${d._id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function openUploadModal() {
+  document.getElementById('dName').value = '';
+  document.getElementById('dType').value = 'id_proof';
+  currentFile = null;
+  document.getElementById('selectedFileInfo').classList.add('hidden');
+  openModal('uploadModal');
+}
+
+function handleFileSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('File must be under 5MB', 'warn'); return; }
+  currentFile = file;
+  showSelectedFile(file);
+}
+
+function showSelectedFile(file) {
+  const exts = { 'image/jpeg':'🖼️','image/png':'🖼️','image/gif':'🖼️','application/pdf':'📄','application/msword':'📝','application/vnd.openxmlformats-officedocument.wordprocessingml.document':'📝' };
+  document.getElementById('selectedFileInfo').classList.remove('hidden');
+  document.getElementById('selFileIco').textContent  = exts[file.type] || '📄';
+  document.getElementById('selFileName').textContent = file.name;
+  document.getElementById('selFileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+}
+
+function handleModalFile(input) { handleFileSelect(input); }
+function dropModalFile(e) { e.preventDefault(); dragLeave(e); const file = e.dataTransfer.files[0]; if(file){currentFile=file;showSelectedFile(file);} }
+function clearModalFile() { currentFile=null; document.getElementById('selectedFileInfo').classList.add('hidden'); }
+function dragOver(e)  { e.preventDefault(); e.currentTarget.classList.add('drag'); }
+function dragLeave(e) { e.currentTarget.classList.remove('drag'); }
+function dropFile(e)  { e.preventDefault(); dragLeave(e); const f=e.dataTransfer.files[0]; if(f){document.getElementById('fileInput').files=[f];handleFileSelect(document.getElementById('fileInput'));} }
+
+async function uploadDocument() {
+  const name = document.getElementById('dName').value.trim();
+  const type = document.getElementById('dType').value;
+  const nameOk = validateField('dName','dNameErr', v => v.trim().length >= 2);
+  if (!nameOk) return;
+  if (!currentFile) { document.getElementById('dFileErr').classList.add('show'); toast('Please select a file', 'warn'); return; }
+  document.getElementById('dFileErr').classList.remove('show');
+
+  const btn = document.getElementById('uploadBtn');
+  btn.classList.add('btn-loading'); btn.textContent = 'Uploading…';
+
+  try {
+    const base64 = await fileToBase64(currentFile);
+    await api('POST', '/documents', {
+      tenant:   tenantData._id,
+      building: tenantData.building?._id || tenantData.building,
+      name, type,
+      fileData: base64,
+      mimeType: currentFile.type,
+      fileName: currentFile.name,
+      fileSize: currentFile.size,
+    });
+    closeModal('uploadModal');
+    toast('Document uploaded!', 'ok');
+    loadDocuments();
+  } catch (err) {
+    toast('Error: ' + err.message, 'err');
+  } finally {
+    btn.classList.remove('btn-loading'); btn.textContent = '📤 Upload Document';
+  }
+}
+
+async function downloadDoc(id, name) {
+  try {
+    const doc = await api('GET', `/documents/${id}`);
+    if (!doc.fileData) { toast('File not available for download', 'warn'); return; }
+    const a = document.createElement('a');
+    a.href = doc.fileData;
+    a.download = doc.fileName || name;
+    a.click();
+  } catch (err) { toast('Error: ' + err.message, 'err'); }
+}
+
+async function deleteDoc(id) {
+  if (!confirm('Delete this document?')) return;
+  try { await api('DELETE', `/documents/${id}`); toast('Document deleted', 'ok'); loadDocuments(); }
+  catch (err) { toast('Error: ' + err.message, 'err'); }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = e => resolve(e.target.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   COMPLAINTS
+════════════════════════════════════════════════════════════════════════════ */
+async function loadComplaints() {
+  document.getElementById('complaintList').innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+  try {
+    const list = await api('GET', `/complaints?tenant=${tenantData._id}`);
+    renderComplaints(list);
+  } catch(err) {
+    document.getElementById('complaintList').innerHTML = `<div class="empty"><p>${err.message}</p></div>`;
+  }
+}
+
+function renderComplaints(list) {
+  const el = document.getElementById('complaintList');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-ico">🔧</div><h3>No Complaints</h3><p>All good! If something needs fixing, submit a complaint.</p></div>`;
+    return;
+  }
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px">` + list.map(c => `
+    <div class="complaint-card">
+      <div class="cc-top">
+        <div>
+          <div class="cc-title">${catIcon(c.category)} ${c.title}</div>
+          <div class="cc-meta">
+            <div class="cc-badges">${statusBadge(c.priority)} ${statusBadge(c.status)}</div>
+            <span class="tx-xs c-dim">${timeAgo(c.createdAt)}</span>
+          </div>
+        </div>
+      </div>
+      <div class="cc-desc">${c.description}</div>
+      ${c.assignedTo ? `<div class="tx-xs" style="color:var(--blue);margin-top:8px">👤 Assigned to: ${c.assignedTo}</div>` : ''}
+      ${c.resolution ? `<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.18);border-radius:var(--r3);padding:10px 12px;font-size:13px;color:var(--green);margin-top:10px">✅ Resolution: ${c.resolution}</div>` : ''}
+      ${c.timeline?.length ? `
+      <details style="margin-top:10px">
+        <summary style="font-size:12px;color:var(--tx2);cursor:pointer;user-select:none">📋 View timeline (${c.timeline.length} updates)</summary>
+        <div class="timeline" style="margin-top:10px">
+          ${c.timeline.map(tl=>`<div class="tl-item"><div class="tl-dot"></div><div class="tl-time">${fmtDate(tl.date)}</div><div class="tl-txt">${tl.note}</div></div>`).join('')}
+        </div>
+      </details>` : ''}
+    </div>`).join('') + `</div>`;
+}
+
+function openComplaintModal() {
+  document.getElementById('cTitle').value    = '';
+  document.getElementById('cDesc').value     = '';
+  document.getElementById('cCategory').value = 'plumbing';
+  document.getElementById('cPriority').value = 'medium';
+  document.getElementById('cTitle').classList.remove('error','valid');
+  document.getElementById('cDesc').classList.remove('error','valid');
+  openModal('complaintModal');
+}
+
+async function submitComplaint() {
+  const titleOk = validateField('cTitle','cTitleErr', v => v.trim().length >= 3);
+  const descOk  = validateField('cDesc', 'cDescErr',  v => v.trim().length >= 10);
+  if (!titleOk || !descOk) { toast('Please fill all required fields', 'warn'); return; }
+
+  const btn = document.getElementById('submitComplaintBtn');
+  btn.classList.add('btn-loading'); btn.textContent = 'Submitting…';
+
+  try {
+    await api('POST', '/complaints', {
+      tenant:      tenantData._id,
+      building:    tenantData.building?._id || tenantData.building,
+      room:        tenantData.room?._id || tenantData.room,
+      title:       document.getElementById('cTitle').value.trim(),
+      description: document.getElementById('cDesc').value.trim(),
+      category:    document.getElementById('cCategory').value,
+      priority:    document.getElementById('cPriority').value,
+    });
+    closeModal('complaintModal');
+    toast('Complaint submitted! Owner will review it soon.', 'ok', 4500);
+    loadComplaints();
+  } catch(err) {
+    toast('Error: ' + err.message, 'err');
+  } finally {
+    btn.classList.remove('btn-loading'); btn.textContent = '📨 Submit Complaint';
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   NOTICES
+════════════════════════════════════════════════════════════════════════════ */
+async function loadNotices() {
+  const el = document.getElementById('noticeList');
+  if (el) el.innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+  try {
+    const bldId  = tenantData.building?._id || tenantData.building;
+    const notices = await api('GET', `/notices${bldId ? `?building=${bldId}` : ''}`);
+    renderNotices(notices);
+  } catch(err) {
+    if (el) el.innerHTML = `<div class="empty"><p>${err.message}</p></div>`;
+  }
+}
+
+function renderNotices(notices) {
+  const el = document.getElementById('noticeList');
+  if (!el) return;
+  if (!notices.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-ico">📢</div><h3>No Notices</h3><p>Your owner hasn't posted any notices yet</p></div>`;
+    return;
+  }
+  const typeIcos = { general:'📣', emergency:'🚨', rule:'📋', event:'🎉', maintenance:'🔧' };
+  const prioBg   = { urgent:'rgba(248,113,113,.12)', important:'rgba(251,191,36,.12)', normal:'rgba(79,142,247,.08)' };
+  el.innerHTML = notices.map(n => `
+    <div class="notice-item ${n.priority}" style="background:${prioBg[n.priority]||'var(--s2)'}">
+      <div class="ni-top">
+        <div class="ni-ico" style="background:${n.priority==='urgent'?'rgba(248,113,113,.15)':n.priority==='important'?'rgba(251,191,36,.15)':'rgba(79,142,247,.15)'}">${typeIcos[n.type]||'📣'}</div>
+        <div class="f1">
+          <div class="ni-title">${n.title}</div>
+          <div class="ni-meta">By ${n.postedBy?.name||'Owner'} · ${timeAgo(n.createdAt)}${n.building ? ` · ${n.building.name}` : ' · All Buildings'}</div>
+        </div>
+      </div>
+      <div class="ni-body">${n.content}</div>
+      <div class="ni-badges">${statusBadge(n.type)} ${statusBadge(n.priority)}</div>
+    </div>`).join('');
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   GUIDELINES
+════════════════════════════════════════════════════════════════════════════ */
+function loadGuidelines() {
+  const defaultRules = [
+    { title:'Quiet Hours', body:'Maintain silence between 10 PM and 6 AM. No loud music, parties or disturbances during these hours.' },
+    { title:'Guest Policy', body:'Guests are allowed only until 8 PM. Overnight guests are strictly prohibited without prior owner approval.' },
+    { title:'Cleanliness', body:'Keep your room and all common areas clean. Dispose of garbage in designated bins only.' },
+    { title:'Rent Payment', body:'Monthly rent must be paid by the 5th of each month. Late payments attract a penalty of ₹50 per day.' },
+    { title:'Electricity & Water', body:'Do not waste electricity or water. Turn off fans, ACs, and lights when leaving the room.' },
+    { title:'Cooking Policy', body:'Cooking is allowed only in the designated kitchen area. No cooking in rooms. Keep kitchen clean after use.' },
+    { title:'Entry & Exit', body:'Main gate closes at 11 PM. Inform the caretaker if returning late. Use the intercom in emergencies.' },
+    { title:'No Smoking / Alcohol', body:'Smoking and consumption of alcohol or drugs is strictly prohibited on PG premises at all times.' },
+    { title:'Property Damage', body:'Any damage to PG property must be reported immediately. Tenant will be liable for repair costs.' },
+    { title:'Notice Period', body:'A 30-day written notice is required before vacating. Failure to do so will result in deposit deduction.' },
+  ];
+
+  const el = document.getElementById('guidelinesList');
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">` +
+    defaultRules.map((r, i) => `
+      <div class="rule-card">
+        <div class="rule-num">${i + 1}</div>
+        <div class="rule-body"><h4>${r.title}</h4><p>${r.body}</p></div>
+      </div>`).join('') + `</div>`;
+
+  // Also load rule notices from backend
+  loadRuleNotices();
+}
+
+async function loadRuleNotices() {
+  const el = document.getElementById('ruleNoticeList');
+  if (!el) return;
+  try {
+    const notices = await api('GET', '/notices?type=rule');
+    if (!notices.length) { el.innerHTML = `<div class="empty" style="padding:20px"><div class="empty-ico" style="font-size:28px">📋</div><p>No rule notices from owner</p></div>`; return; }
+    el.innerHTML = `<div class="notice-list">` + notices.map(n => `
+      <div class="notice-item ${n.priority}">
+        <div class="ni-title" style="margin-bottom:6px">📋 ${n.title}</div>
+        <div class="ni-body">${n.content}</div>
+        <div class="ni-badges" style="margin-top:8px">${statusBadge(n.priority)} <span class="tx-xs c-dim">${fmtDate(n.createdAt)}</span></div>
+      </div>`).join('') + `</div>`;
+  } catch(e) { el.innerHTML = '<div class="empty" style="padding:20px"><p>Could not load rule notices</p></div>'; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LOGOUT
+════════════════════════════════════════════════════════════════════════════ */
+function doLogout() {
+  if (!confirm('Sign out of tenant portal?')) return;
+  localStorage.removeItem('pt_tenant');
+  localStorage.removeItem('pt_token');
+  tenantData = null;
+  document.getElementById('loginPage').style.display  = '';
+  document.getElementById('portalPage').style.display = 'none';
+  document.getElementById('mobNav').style.display     = 'none';
+  document.getElementById('logoutBtn').classList.add('hidden');
+  document.getElementById('hdrTag').textContent       = 'Welcome';
+  document.getElementById('loginPhone').value = '';
+  document.getElementById('confirmPin').value = '';
+  backToStep1();
+  toast('Signed out successfully', 'info');
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   INIT — check saved session
+════════════════════════════════════════════════════════════════════════════ */
+(function init() {
+  const saved = localStorage.getItem('pt_tenant');
+  if (saved) {
+    try {
+      const t = JSON.parse(saved);
+      if (t && t._id) { foundTenant = t; startPortal(t); return; }
+    } catch(e) {}
+  }
+  document.getElementById('mobNav').style.display = 'none';
+})();
+</script>
+</body>
+</html>
