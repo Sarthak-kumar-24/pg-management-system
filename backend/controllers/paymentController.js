@@ -166,3 +166,51 @@ exports.stats = async (req, res, next) => {
     next(err);
   }
 };
+
+// POST /api/payments/electricity — Generate room electricity bills
+exports.addElectricity = async (req, res, next) => {
+  try {
+    const { building, room, month, year, meterStart, meterEnd, unitRate, dueDate } = req.body;
+    
+    // 1. Calculate the units
+    const units = Number(meterEnd) - Number(meterStart);
+    if (units < 0) return res.status(400).json({ error: "End reading must be greater than Start reading" });
+
+    const totalAmount = units * Number(unitRate);
+
+    // 2. Find all active tenants currently assigned to this room
+    const tenants = await Tenant.find({ room: room, status: "active" });
+    if (!tenants.length) return res.status(400).json({ error: "No active tenants in this room to bill." });
+
+    // 3. Split the bill equally
+    const splitAmount = Math.round(totalAmount / tenants.length);
+    const created = [];
+
+    // 4. Generate a payment record for each tenant
+    for (const t of tenants) {
+      const p = await Payment.create({
+        tenant: t._id,
+        room: room,
+        building: building,
+        amount: splitAmount,
+        type: "electricity",
+        month: Number(month),
+        year: Number(year),
+        status: "pending",
+        dueDate: dueDate || new Date(),
+        meterStart: Number(meterStart),
+        meterEnd: Number(meterEnd),
+        unitRate: Number(unitRate),
+        notes: `Electricity: ${meterStart} to ${meterEnd} (${units} units @ ₹${unitRate}/unit). Room Total: ₹${totalAmount}, Split among ${tenants.length} tenants.`
+      });
+      created.push(p);
+    }
+    
+    res.status(201).json({ 
+      message: `Generated electricity bills for ${tenants.length} tenants.`, 
+      totalAmount 
+    });
+  } catch (err) {
+    next(err);
+  }
+};
