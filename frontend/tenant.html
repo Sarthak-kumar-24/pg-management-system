@@ -929,7 +929,9 @@ function validateField(id, errId, check) {
 /* ════════════════════════════════════════════════════════════════════════════
    LOGIN FLOW
 ════════════════════════════════════════════════════════════════════════════ */
+  /*
 let foundTenant = null;
+let foundTenantToken = null;
 
 async function findTenant() {
   const phone = document.getElementById('loginPhone').value.trim();
@@ -978,7 +980,65 @@ function confirmLogin() {
   localStorage.setItem('pt_tenant', JSON.stringify(foundTenant));
   startPortal(foundTenant);
 }
+*/
+let foundTenant = null;
+let foundTenantToken = null; // 🛑 We must save the token temporarily
 
+async function findTenant() {
+  const phone = document.getElementById('loginPhone').value.trim();
+  if (!validatePhone(document.getElementById('loginPhone'))) return;
+
+  const btn = document.getElementById('findBtn');
+  btn.classList.add('btn-loading'); btn.textContent = 'Searching…';
+
+  try {
+    // 🛑 Use standard fetch to hit our new PUBLIC login route instead of the protected api() wrapper
+    const res = await fetch('/api/tenants/public/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone })
+    });
+    
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    foundTenant = data.tenant;
+    foundTenantToken = data.token; // 🛑 Save the newly generated JWT token
+
+    document.getElementById('ftAvatar').textContent = initials(foundTenant.name);
+    document.getElementById('ftName').textContent   = foundTenant.name;
+    document.getElementById('ftRoom').textContent   = `${foundTenant.building?.name || '—'} · Room ${foundTenant.room?.roomNumber || '—'}`;
+
+    document.getElementById('step1').classList.add('hidden');
+    document.getElementById('step2').classList.remove('hidden');
+    document.getElementById('dot1').classList.remove('active'); document.getElementById('dot1').classList.add('done');
+    document.getElementById('dot2').classList.add('active');
+    document.getElementById('confirmPin').focus();
+
+  } catch (err) {
+    toast('Error: ' + err.message, 'err');
+  } finally {
+    btn.classList.remove('btn-loading'); btn.textContent = 'Find My Account →';
+  }
+}
+
+function confirmLogin() {
+  const pin   = document.getElementById('confirmPin').value;
+  const phone = foundTenant.phone.replace(/\D/g,'');
+  if (pin.length < 4 || !phone.endsWith(pin)) {
+    document.getElementById('pinErr').classList.add('show');
+    document.getElementById('confirmPin').classList.add('error');
+    return;
+  }
+  document.getElementById('pinErr').classList.remove('show');
+  
+  // 🛑 Store the JWT token securely so the api() wrapper can use it for all future requests!
+  localStorage.setItem('pt_token', foundTenantToken);
+  localStorage.setItem('pt_tenant', JSON.stringify(foundTenant));
+  startPortal(foundTenant);
+}
+
+  
 function backToStep1() {
   document.getElementById('step2').classList.add('hidden');
   document.getElementById('step1').classList.remove('hidden');
