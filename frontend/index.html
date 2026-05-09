@@ -535,6 +535,12 @@
                 >
                   ⚡ Generate Monthly
                 </button>
+                <button 
+                  class="btn btn-sec" 
+                  onclick="Payments.openElectricityForm()"
+                >
+                  ⚡ Room Electricity
+                </button>
                 <button class="btn btn-primary" onclick="Payments.openForm()">
                   + Record Payment
                 </button>
@@ -1642,6 +1648,51 @@
           >
             Save Payment
           </button>
+        </div>
+      </div>
+    </div>
+    <div class="mo" id="moElectricity">
+      <div class="mo-box mo-sm">
+        <div class="mo-hdr">
+          <span class="mo-title">Record Room Electricity</span>
+          <button class="mo-close" onclick="closeModal('moElectricity')">✕</button>
+        </div>
+        <div class="mo-body">
+          <div class="fg">
+            <label class="fl">Building *</label>
+            <select id="eBldg" class="fc sel-building-req" onchange="Payments.onEBldgChange()"></select>
+          </div>
+          <div class="fg">
+            <label class="fl">Room *</label>
+            <select id="eRoom" class="fc"><option value="">Select Room</option></select>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Start Reading</label>
+              <input type="number" id="eStart" class="fc" placeholder="e.g. 005" oninput="Payments.calcE()">
+            </div>
+            <div class="fg">
+              <label class="fl">End Reading</label>
+              <input type="number" id="eEnd" class="fc" placeholder="e.g. 015" oninput="Payments.calcE()">
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label class="fl">Rate / Unit (₹)</label>
+              <input type="number" id="eRate" class="fc" value="8" oninput="Payments.calcE()">
+            </div>
+            <div class="fg">
+              <label class="fl">Month</label>
+              <input type="number" id="eMonth" class="fc" value="5" min="1" max="12">
+            </div>
+          </div>
+          <div class="alert al-info mt-3" id="eSummary">
+            Units: 0<br>Room Total: ₹0
+          </div>
+        </div>
+        <div class="mo-foot">
+          <button class="btn btn-sec" onclick="closeModal('moElectricity')">Cancel</button>
+          <button class="btn btn-primary" id="elecSaveBtn" onclick="Payments.saveElectricity()">Generate Bills</button>
         </div>
       </div>
     </div>
