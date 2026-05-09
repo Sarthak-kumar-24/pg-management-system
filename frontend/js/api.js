@@ -68,6 +68,7 @@ const Api = {
     delete:          id      => Api.delete(`/payments/${id}`),
     stats:           q       => Api.get('/payments/stats/summary' + qStr(q)),
     generateMonthly: b       => Api.post('/payments/generate-monthly', b),
+    addElectricity:  b       => Api.post('/payments/electricity', b),
   },
   bills: {
     list:   q       => Api.get('/bills' + qStr(q)),
