@@ -238,7 +238,7 @@ const Payments = {
 
     try {
       setBusy("elecSaveBtn", true);
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("pg_token");
       // Ensure you add this route to your Api object (e.g. Api.payments.addElectricity)
       // Or make a raw fetch call:
       const res = await fetch("/api/payments/electricity", {
