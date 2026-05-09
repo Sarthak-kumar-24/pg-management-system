@@ -11,6 +11,8 @@ router.post("/", auth, ctrl.create);
 router.get("/:id", auth, ctrl.get);
 router.put("/:id", auth, ctrl.update);
 router.delete("/:id", auth, role("owner"), ctrl.remove);
-router.post("/export", auth, ctrl.exportAndClean);
+
+router.post("/export", auth, ctrl.exportPdf);
+router.delete("/bulk", auth, role("owner"), ctrl.deleteBulk); // 🛑 Protected: Owner Only!
 
 module.exports = router;
