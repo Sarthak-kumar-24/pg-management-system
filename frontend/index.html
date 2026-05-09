@@ -293,6 +293,7 @@
           </section>
 
           <!-- ══════════════════ ROOMS ══════════════════ -->
+          <!--
           <section class="page" id="page-rooms">
             <div class="pg-hdr">
               <div class="pg-hdr-l">
@@ -360,6 +361,29 @@
             </div>
             <div id="qrRoomList" class="ga"></div>
           </div>
+          -->
+          <section class="page" id="page-rooms">
+            <div class="pg-hdr">
+              </div>
+            <div class="fbar">
+              </div>
+            <div id="roomList">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+          </section> <section id="page-qrs" class="page">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Room QR Codes</h1>
+                <p>Generate printable onboarding QR codes for each room.</p>
+              </div>
+              <div class="pg-hdr-r">
+                <select id="qrBldgFilter" class="fc" style="width: 200px" onchange="Qrs.loadRooms()">
+                  <option value="">Select Building...</option>
+                </select>
+              </div>
+            </div>
+            <div id="qrRoomList" class="ga"></div>
+          </section>
 
           <!-- ══════════════════ TENANTS ══════════════════ -->
           <section class="page" id="page-tenants">
