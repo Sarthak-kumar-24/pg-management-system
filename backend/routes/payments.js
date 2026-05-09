@@ -5,7 +5,7 @@ const role = require("../middleware/roleCheck");
 
 router.get("/stats/summary", auth, ctrl.stats);
 router.post("/generate-monthly", auth, ctrl.generateMonthly);
-router.post("/electricity", paymentController.addElectricity);
+router.post("/electricity", auth, ctrl.addElectricity);
 router.get("/", auth, ctrl.list);
 router.post("/", auth, ctrl.create);
 router.get("/:id", auth, ctrl.get);
