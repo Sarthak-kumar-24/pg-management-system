@@ -104,7 +104,7 @@ const Qrs = {
     printWindow.document.close();
   }
   */
-
+/*
    print() {
     const title = document.getElementById("qrPrintTitle").innerText;
     
@@ -152,6 +152,68 @@ const Qrs = {
     `);
     
     printWindow.document.close();
+  }
+  */
+   print() {
+    const title = document.getElementById("qrPrintTitle").innerText;
+    
+    // 1. Grab the QR code image securely
+    const canvas = document.querySelector("#qrcodeDisplay canvas");
+    const img = document.querySelector("#qrcodeDisplay img");
+    
+    let qrSrc = "";
+    if (canvas) {
+      qrSrc = canvas.toDataURL("image/png");
+    } else if (img && img.src) {
+      qrSrc = img.src;
+    }
+
+    if (!qrSrc) {
+      toast("QR Code is still generating...", "warn");
+      return;
+    }
+
+    // 2. Create an invisible Iframe (Bypasses Popup Blockers!)
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
+
+    // 3. Write the print layout into the hidden iframe
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(`
+      <html>
+        <head>
+          <title>${title}</title>
+          <style>
+            body { font-family: sans-serif; text-align: center; margin-top: 10%; background: white; }
+            h1 { font-size: 38px; margin-bottom: 10px; color: black; }
+            p { color: #444; margin-bottom: 40px; font-size: 18px; }
+            img { width: 300px; height: 300px; padding: 20px; border: 3px dashed black; border-radius: 12px; }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <p>Scan to register and upload documents</p>
+          <img src="${qrSrc}" />
+        </body>
+      </html>
+    `);
+    doc.close();
+
+    // 4. Trigger the native print dialog after a tiny delay to let the image load
+    iframe.contentWindow.focus();
+    setTimeout(() => {
+      iframe.contentWindow.print();
+      
+      // Clean up the iframe after printing is done
+      setTimeout(() => document.body.removeChild(iframe), 2000);
+    }, 250);
   }
 };
 
