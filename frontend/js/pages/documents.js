@@ -16,7 +16,9 @@ const Documents = {
       };
       const list = await Api.documents.list(q);
       this.render(list || []);
-    } catch (err) { toast(err.message, 'err'); }
+    } catch (err) { 
+       toast(err.message, 'err');
+    }
   },
 
   render(list) {
@@ -24,7 +26,9 @@ const Documents = {
       setHtml('documentList', emptyState('📁', 'No documents', 'Upload ID proofs, agreements, and receipts'));
       return;
     }
-    const typeColor = { id_proof:'b-blue', agreement:'b-gold', receipt:'b-green', photo:'b-purple', other:'b-gray' };
+    const typeColor = {
+       id_proof:'b-blue', agreement:'b-gold', receipt:'b-green', photo:'b-purple', other:'b-gray' 
+    };
     setHtml('documentList', `<div class="ga">${list.map(d => `
       <div class="card">
         <div class="flex items-c just-b mb-3">
@@ -72,7 +76,11 @@ const Documents = {
   previewFile() {
     const file = el('docFile')?.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast('File must be under 5 MB', 'warn'); el('docFile').value = ''; return; }
+    if (file.size > 5 * 1024 * 1024) {
+       toast('File must be under 5 MB', 'warn'); 
+       el('docFile').value = '';
+       return; 
+    }
     const reader = new FileReader();
     reader.onload = e => {
       const src = e.target.result;
@@ -176,7 +184,7 @@ const Documents = {
     } finally {
       setBusy("docSaveBtn", false);
     }
-  }
+  },
   async download(id, name) {
     try {
       const doc = await Api.documents.get(id);
@@ -196,5 +204,5 @@ const Documents = {
       toast('Document deleted', 'ok');
       this.load();
     } catch (err) { toast(err.message, 'err'); }
-  },
+  }
 };
