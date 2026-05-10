@@ -151,7 +151,7 @@ const Rooms = {
         })
         .join("")}</div>`,
     );
-  }
+  },
 
   async openForm(id = null) {
     this.editId = id;
