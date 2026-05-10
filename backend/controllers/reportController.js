@@ -152,6 +152,7 @@ exports.dashboard = async (req, res) => {
 };
 */
 // GET /api/reports/dashboard
+/*
 exports.dashboard = async (req, res) => {
   try {
     const now = new Date();
@@ -238,6 +239,111 @@ exports.dashboard = async (req, res) => {
       pendingDues: pendingDuesAmount,
       pendingPaymentsCount: dynamicPendingDues.length,
       pendingPayments: dynamicPendingDues.slice(0, 20), // Send top 20 to the UI
+      
+      month,
+      year,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+*/
+// GET /api/reports/dashboard
+exports.dashboard = async (req, res) => {
+  try {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    const [
+      totalTenants,
+      activeTenantsList, // Fetches FULL tenant profiles for rent data
+      buildingCount,
+      allRooms,
+      openComplaints,
+      thisMonthRentPayments, // Fetches ALL rent payments
+    ] = await Promise.all([
+      Tenant.countDocuments(),
+      Tenant.find({ status: { $in: ["active", "notice_period"] } }).populate("building room"),
+      Building.countDocuments({ isActive: true }),
+      Room.find({}),
+      Complaint.countDocuments({ status: { $in: ["open", "in_progress"] } }),
+      Payment.find({ type: "rent", month, year }).populate("tenant", "name phone").populate("building", "name").populate("room", "roomNumber"),
+    ]);
+
+    // 1. PHYSICAL BED CALCULATION (Room-by-Room to prevent spillover)
+    const totalBeds = allRooms.reduce((s, r) => s + (r.totalBeds || 1), 0);
+    
+    let occupiedPhysicalBeds = 0;
+    allRooms.forEach(room => {
+      // Find tenants living in this specific room
+      const tenantsInRoom = activeTenantsList.filter(t => t.room && t.room._id.toString() === room._id.toString());
+      
+      // Calculate occupied physical beds for this room (Max is the room's total beds)
+      const physicalOccupied = Math.min(room.totalBeds || 1, tenantsInRoom.length);
+      occupiedPhysicalBeds += physicalOccupied;
+    });
+
+    const vacantBeds = totalBeds - occupiedPhysicalBeds;
+
+    // 2. TRUE FINANCIAL CALCULATION (Expected vs Collected)
+    let expectedRent = 0;
+    let totalIncome = 0;
+    let dynamicPendingDues = [];
+    let pendingDuesAmount = 0;
+
+    // Sum up only successful payments
+    thisMonthRentPayments.forEach(p => {
+      if (p.status === 'paid' || p.status === 'partial') {
+        totalIncome += p.amount;
+      }
+    });
+
+    // Cross-reference what each tenant paid vs what their profile says they owe
+    activeTenantsList.forEach(tenant => {
+      const expected = tenant.monthlyRent || 0;
+      expectedRent += expected;
+
+      const tenantPayments = thisMonthRentPayments.filter(p => 
+        p.tenant && p.tenant._id.toString() === tenant._id.toString() && (p.status === 'paid' || p.status === 'partial')
+      );
+      
+      const tenantPaid = tenantPayments.reduce((sum, p) => sum + p.amount, 0);
+      const remainingDue = expected - tenantPaid;
+
+      // Add to pending dues list if they owe money
+      if (remainingDue > 0) {
+        pendingDuesAmount += remainingDue;
+        dynamicPendingDues.push({
+          _id: "due_" + tenant._id,
+          tenant: tenant,
+          building: tenant.building,
+          room: tenant.room,
+          amount: remainingDue,
+          status: "pending",
+          month,
+          year,
+          type: "rent"
+        });
+      }
+    });
+
+    res.json({
+      totalTenants,
+      activeTenants: activeTenantsList.length,
+      buildingCount,
+      totalRooms: allRooms.length,
+      totalBeds,
+      occupiedBeds: occupiedPhysicalBeds, // 🛑 Uses the corrected physical bed count
+      vacantBeds,
+      openComplaints,
+      
+      // Financials
+      expectedIncome: expectedRent,
+      totalIncome: totalIncome,
+      pendingDues: pendingDuesAmount,
+      pendingPaymentsCount: dynamicPendingDues.length,
+      pendingPayments: dynamicPendingDues.slice(0, 20),
       
       month,
       year,
@@ -334,6 +440,7 @@ exports.occupancy = async (req, res) => {
   }
 };
 */
+/*
 exports.occupancy = async (req, res) => {
   try {
     const buildings = await Building.find({ isActive: true });
@@ -372,7 +479,50 @@ exports.occupancy = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+*/
+// GET /api/reports/occupancy
+exports.occupancy = async (req, res) => {
+  try {
+    const buildings = await Building.find({ isActive: true });
+    const report = await Promise.all(
+      buildings.map(async (b) => {
+        const rooms = await Room.find({ building: b._id });
+        const totalBeds = rooms.reduce((s, r) => s + (r.totalBeds || 1), 0);
+        
+        const activeTenantsList = await Tenant.find({
+          building: b._id,
+          status: { $in: ["active", "notice_period"] },
+        }).select("room");
 
+        // 🛑 Apply the room-by-room physical bed logic to the occupancy table as well
+        let occupiedPhysicalBeds = 0;
+        rooms.forEach(room => {
+          const tenantsInRoom = activeTenantsList.filter(t => t.room && t.room.toString() === room._id.toString());
+          occupiedPhysicalBeds += Math.min(room.totalBeds || 1, tenantsInRoom.length);
+        });
+
+        const vacantBeds = totalBeds - occupiedPhysicalBeds;
+
+        return {
+          building: b.name,
+          buildingId: b._id,
+          type: b.type,
+          totalRooms: rooms.length,
+          totalBeds,
+          occupiedBeds: occupiedPhysicalBeds, 
+          vacantBeds,
+          activeTenants: activeTenantsList.length,
+          occupancyRate: totalBeds
+            ? +((occupiedPhysicalBeds / totalBeds) * 100).toFixed(1)
+            : 0,
+        };
+      }),
+    );
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 // GET /api/reports/profit
 exports.profit = async (req, res) => {
   try {
