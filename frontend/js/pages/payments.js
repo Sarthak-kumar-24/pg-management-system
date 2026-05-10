@@ -34,6 +34,7 @@ const Payments = {
   },
   */
 const Payments = {
+   /*
   async load() {
     setHtml("paymentList", spinner());
     await Store.fillBuildings("#payBldgFilter");
@@ -55,6 +56,64 @@ const Payments = {
       
       this.renderStats(dashboardStats);
       this.renderList(list || []);
+    } catch (err) {
+      toast(err.message, "err");
+    }
+  },
+  */
+   async load() {
+    setHtml("paymentList", spinner());
+    await Store.fillBuildings("#payBldgFilter");
+    try {
+      const now = new Date();
+      const q = {
+        building: val("payBldgFilter"),
+        status: val("payStatusFilter"),
+        type: val("payTypeFilter"),
+        month: val("payMonthFilter"),
+        year: val("payYearFilter") || now.getFullYear(),
+      };
+
+      // Fetch BOTH the physical database records and the smart Dashboard stats
+      const [dbList, dashboardStats] = await Promise.all([
+        Api.payments.list(q),
+        Api.reports.dashboard(),
+      ]);
+
+      this.renderStats(dashboardStats);
+
+      // 1. Start with the actual database records
+      let finalList = dbList || [];
+
+      // 2. Inject virtual "missing rent" dynamically calculated by the dashboard
+      if (!q.status || q.status === "pending" || q.status === "overdue") {
+         const virtualDues = dashboardStats.pendingPayments || [];
+         
+         virtualDues.forEach(vd => {
+            // Apply dropdown filters manually to virtual dues
+            if (q.building && vd.building?._id !== q.building && vd.building !== q.building) return;
+            if (q.month && vd.month !== Number(q.month)) return;
+            if (q.year && vd.year !== Number(q.year)) return;
+            if (q.type && q.type !== 'rent') return;
+
+            // 🛑 THE FIX: This correctly allows virtual dues to show up even if a "partial" payment exists!
+            const alreadyInDb = finalList.some(dbP => 
+                dbP.tenant?._id === vd.tenant?._id && 
+                dbP.month === vd.month && 
+                dbP.year === vd.year && 
+                dbP.type === 'rent' && 
+                (dbP.status === 'pending' || dbP.status === 'overdue') 
+            );
+
+            // If it's truly missing, add it to the table as a Virtual record!
+            if (!alreadyInDb) {
+                vd.isVirtual = true;
+                finalList.push(vd);
+            }
+         });
+      }
+
+      this.renderList(finalList);
     } catch (err) {
       toast(err.message, "err");
     }
