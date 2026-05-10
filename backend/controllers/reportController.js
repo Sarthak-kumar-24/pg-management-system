@@ -21,6 +21,7 @@ const MONTHS = [
 ];
 
 // GET /api/reports/dashboard
+/*
 exports.dashboard = async (req, res) => {
   try {
     const now = new Date();
@@ -70,6 +71,72 @@ exports.dashboard = async (req, res) => {
       totalBeds,
       occupiedBeds,
       vacantBeds: totalBeds - occupiedBeds,
+      openComplaints,
+      totalIncome,
+      pendingDues,
+      pendingPaymentsCount: pendingPayments.length,
+      pendingPayments,
+      month,
+      year,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+*/
+exports.dashboard = async (req, res) => {
+  try {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    const [
+      totalTenants,
+      activeTenants, // 🛑 FIX: Now counts both active AND notice period for true occupancy
+      buildingCount,
+      allRooms,
+      openComplaints,
+      pendingPayments,
+      thisMonthPaid,
+    ] = await Promise.all([
+      Tenant.countDocuments(),
+      Tenant.countDocuments({ status: { $in: ["active", "notice_period"] } }), 
+      Building.countDocuments({ isActive: true }),
+      Room.find({}),
+      Complaint.countDocuments({ status: { $in: ["open", "in_progress"] } }),
+      Payment.find({
+        status: { $in: ["pending", "overdue"] },
+        type: "rent",
+        month,
+        year,
+      })
+        .populate("tenant", "name phone")
+        .populate("building", "name")
+        .populate("room", "roomNumber")
+        .limit(20),
+      Payment.find({ status: "paid", type: "rent", month, year }),
+    ]);
+
+    // 🛑 FIX: Total beds physical count
+    const totalBeds = allRooms.reduce((s, r) => s + (r.totalBeds || 1), 0);
+    
+    // 🛑 FIX: Occupied beds is strictly equal to living bodies!
+    const occupiedBeds = activeTenants;
+    
+    // 🛑 FIX: Math.max ensures vacant beds don't go negative if overbooked
+    const vacantBeds = Math.max(0, totalBeds - occupiedBeds);
+
+    const totalIncome = thisMonthPaid.reduce((s, p) => s + p.amount, 0);
+    const pendingDues = pendingPayments.reduce((s, p) => s + p.amount, 0);
+
+    res.json({
+      totalTenants,
+      activeTenants,
+      buildingCount,
+      totalRooms: allRooms.length,
+      totalBeds,
+      occupiedBeds,
+      vacantBeds,
       openComplaints,
       totalIncome,
       pendingDues,
@@ -133,6 +200,7 @@ exports.expenses = async (req, res) => {
 };
 
 // GET /api/reports/occupancy
+/*
 exports.occupancy = async (req, res) => {
   try {
     const buildings = await Building.find({ isActive: true });
@@ -156,6 +224,45 @@ exports.occupancy = async (req, res) => {
           totalBeds,
           occupiedBeds,
           vacantBeds: totalBeds - occupiedBeds,
+          activeTenants,
+          occupancyRate: totalBeds
+            ? +((occupiedBeds / totalBeds) * 100).toFixed(1)
+            : 0,
+        };
+      }),
+    );
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+*/
+exports.occupancy = async (req, res) => {
+  try {
+    const buildings = await Building.find({ isActive: true });
+    const report = await Promise.all(
+      buildings.map(async (b) => {
+        const rooms = await Room.find({ building: b._id });
+        const totalBeds = rooms.reduce((s, r) => s + (r.totalBeds || 1), 0);
+        
+        // 🛑 FIX: Count real active tenants for this specific building
+        const activeTenants = await Tenant.countDocuments({
+          building: b._id,
+          status: { $in: ["active", "notice_period"] },
+        });
+
+        // 🛑 FIX: Sync occupied beds to active tenants
+        const occupiedBeds = activeTenants;
+        const vacantBeds = Math.max(0, totalBeds - occupiedBeds);
+
+        return {
+          building: b.name,
+          buildingId: b._id,
+          type: b.type,
+          totalRooms: rooms.length,
+          totalBeds,
+          occupiedBeds,
+          vacantBeds,
           activeTenants,
           occupancyRate: totalBeds
             ? +((occupiedBeds / totalBeds) * 100).toFixed(1)
