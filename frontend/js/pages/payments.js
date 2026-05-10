@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════
    payments.js
 ═══════════════════════════════════════════════════════════════ */
+/*
 const Payments = {
   async load() {
     setHtml("paymentList", spinner());
@@ -30,6 +31,41 @@ const Payments = {
     setText("payStatCollected", fmt(s?.totalCollected));
     setText("payStatPending", fmt(s?.totalPending));
     setText("payStatOverdue", s?.overdueCount ?? "—");
+  },
+  */
+const Payments = {
+  async load() {
+    setHtml("paymentList", spinner());
+    await Store.fillBuildings("#payBldgFilter");
+    try {
+      const now = new Date();
+      const q = {
+        building: val("payBldgFilter"),
+        status: val("payStatusFilter"),
+        type: val("payTypeFilter"),
+        month: val("payMonthFilter"),
+        year: val("payYearFilter") || now.getFullYear(),
+      };
+      
+      // 🛑 THE FIX: Fetch the accurate financial stats from our newly updated Dashboard API
+      const [list, dashboardStats] = await Promise.all([
+        Api.payments.list(q),
+        Api.reports.dashboard(), 
+      ]);
+      
+      this.renderStats(dashboardStats);
+      this.renderList(list || []);
+    } catch (err) {
+      toast(err.message, "err");
+    }
+  },
+
+  renderStats(s) {
+    // 🛑 THE FIX: Map to the exact variable names we created in the backend
+    setText("payStatExpected", fmt(s?.expectedIncome || 0));
+    setText("payStatCollected", fmt(s?.totalIncome || 0));
+    setText("payStatPending", fmt(s?.pendingDues || 0));
+    setText("payStatOverdue", s?.pendingPaymentsCount ?? "0");
   },
 
   renderList(list) {
