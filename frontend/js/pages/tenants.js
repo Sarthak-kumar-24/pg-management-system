@@ -214,7 +214,7 @@ const Tenants = {
       await this.onRoomChange(selectedRoom);
     }
   },
-
+/*
   async onRoomChange(roomId) {
     const id = roomId || val("tRoom");
     if (!id) return;
@@ -233,7 +233,41 @@ const Tenants = {
           .join("");
     } catch {}
   },
+  */
+   async onRoomChange(roomId) {
+    // If 'roomId' is not passed, it means the user manually clicked the dropdown
+    const isManualChange = !roomId; 
+    const id = roomId || val("tRoom");
+    
+    if (!id) return;
+    
+    try {
+      const room = await Api.rooms.get(id);
+      
+      // 1. Force update the rent ONLY when the user manually changes the room
+      if (isManualChange) {
+        setVal("tRent", room.monthlyRent);
+      } else if (!val("tRent")) {
+        setVal("tRent", room.monthlyRent); // Fallback for edit mode
+      }
 
+      const sel = el("tBed");
+      if (!sel) return;
+
+      // 2. Map existing beds
+      let optionsHtml = '<option value="">Select Bed</option>' +
+        room.beds.map((b) =>
+            `<option value="${b.bedNumber}" ${b.isOccupied && b.tenant?._id !== this.editId ? "disabled" : ""}>${b.isOccupied ? "🔴" : "🟢"} Bed ${b.bedNumber}${b.isOccupied ? (b.tenant ? " — " + b.tenant.name : " — Occupied") : " — Free"}</option>`,
+        ).join("");
+
+      // 3. OVERBOOKING FIX: Always append an Extra Bed option!
+      const extraBedNum = room.beds.length + 1;
+      optionsHtml += `<option value="+${extraBedNum}">🟡 Extra Bed (+${extraBedNum})</option>`;
+
+      sel.innerHTML = optionsHtml;
+    } catch {}
+  },
+/*
   async save() {
     const data = {
       name: val("tName"),
@@ -298,7 +332,91 @@ const Tenants = {
       setBusy("tenantSaveBtn", false);
     }
   },
+*/
+   async save() {
+    // 1. Safely handle the Extra Bed string (e.g., convert "+3" into just 3)
+    let bedVal = val("tBed");
+    if (bedVal && typeof bedVal === "string" && bedVal.startsWith("+")) {
+      bedVal = bedVal.replace("+", "");
+    }
 
+    const data = {
+      name: val("tName"),
+      phone: val("tPhone"),
+      email: val("tEmail"),
+      alternatePhone: val("tAltPhone"),
+      building: val("tBuilding"),
+      room: val("tRoom") || null,
+      
+      // 🛑 FIX: Use the safely parsed bed value
+      bedNumber: bedVal ? Number(bedVal) : null, 
+      
+      // 🛑 CUSTOM OVERRIDE: Captures exact rent from the input box
+      monthlyRent: +val("tRent"), 
+      
+      depositAmount: +val("tDeposit") || 0,
+      depositPaid: checked("tDepositPaid"),
+      joiningDate: val("tJoining"),
+      status: val("tStatus"),
+      behavior: val("tBehavior"),
+      idVerified: checked("tIdVerified"),
+      idType: val("tIdType"),
+      idNumber: val("tIdNumber"),
+      occupation: val("tOccupation"),
+      college: val("tOccupation") === "Student" ? val("tOrg") : "",
+      company: val("tOccupation") !== "Student" ? val("tOrg") : "",
+      notes: val("tNotes"),
+      emergencyContact: {
+        name: val("tEcName"),
+        phone: val("tEcPhone"),
+        relation: val("tEcRelation"),
+      },
+      address: {
+        permanent: val("tPermAddr"),
+        city: val("tCity"),
+        state: val("tState"),
+        pincode: val("tPincode"),
+      },
+    };
+
+    if (
+      !data.name ||
+      !data.phone ||
+      !data.building ||
+      !data.monthlyRent ||
+      !data.joiningDate
+    )
+      return toast(
+        "Name, phone, building, rent, joining date required",
+        "warn",
+      );
+
+    Object.keys(data).forEach((key) => {
+      if (data[key] === "") {
+        delete data[key];
+      }
+    });
+
+    try {
+      setBusy("tenantSaveBtn", true);
+      if (this.editId) await Api.tenants.update(this.editId, data);
+      else await Api.tenants.create(data);
+      toast(this.editId ? "Tenant updated" : "Tenant added", "ok");
+      Store.invalidate();
+      closeModal("moTenant");
+      this.load();
+
+      // 🛑 SYNC FIX: Automatically refresh other pages so occupancy and financial numbers instantly update
+      if (typeof Dashboard !== 'undefined' && el("page-dashboard")?.classList.contains("active")) Dashboard.load();
+      if (typeof Rooms !== 'undefined' && el("page-rooms")?.classList.contains("active")) Rooms.load();
+      if (typeof Payments !== 'undefined' && el("page-payments")?.classList.contains("active")) Payments.load();
+
+    } catch (err) {
+      toast(err.message, "err");
+    } finally {
+      setBusy("tenantSaveBtn", false);
+    }
+  },
   async delete(id) {
     const ok = await confirmAction(
       "Delete this tenant? This will free their bed.",
