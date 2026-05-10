@@ -84,6 +84,7 @@ exports.dashboard = async (req, res) => {
   }
 };
 */
+/*
 exports.dashboard = async (req, res) => {
   try {
     const now = new Date();
@@ -142,6 +143,102 @@ exports.dashboard = async (req, res) => {
       pendingDues,
       pendingPaymentsCount: pendingPayments.length,
       pendingPayments,
+      month,
+      year,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+*/
+// GET /api/reports/dashboard
+exports.dashboard = async (req, res) => {
+  try {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    const [
+      totalTenants,
+      activeTenantsList, // 🛑 FIX: Fetch FULL tenant profiles to read their exact rent
+      buildingCount,
+      allRooms,
+      openComplaints,
+      thisMonthRentPayments, // 🛑 FIX: Fetch ALL rent payments for this month
+    ] = await Promise.all([
+      Tenant.countDocuments(),
+      Tenant.find({ status: { $in: ["active", "notice_period"] } }).populate("building room"),
+      Building.countDocuments({ isActive: true }),
+      Room.find({}),
+      Complaint.countDocuments({ status: { $in: ["open", "in_progress"] } }),
+      Payment.find({ type: "rent", month, year }).populate("tenant", "name phone").populate("building", "name").populate("room", "roomNumber"),
+    ]);
+
+    // 1. Physical Room/Bed Occupancy
+    const totalBeds = allRooms.reduce((s, r) => s + (r.totalBeds || 1), 0);
+    const occupiedBeds = activeTenantsList.length; 
+    const vacantBeds = Math.max(0, totalBeds - occupiedBeds);
+
+    // 2. TRUE Financial Calculation (Expected vs Collected)
+    let expectedRent = 0;
+    let totalIncome = 0;
+    let dynamicPendingDues = [];
+    let pendingDuesAmount = 0;
+
+    // Calculate total collected rent (Summing up only successful payments)
+    thisMonthRentPayments.forEach(p => {
+      if (p.status === 'paid' || p.status === 'partial') {
+        totalIncome += p.amount;
+      }
+    });
+
+    // 3. The Core Logic: Compare what each tenant paid vs what they SHOULD pay
+    activeTenantsList.forEach(tenant => {
+      const expected = tenant.monthlyRent || 0;
+      expectedRent += expected;
+
+      // Find all successful payments this specific tenant made this month
+      const tenantPayments = thisMonthRentPayments.filter(p => 
+        p.tenant && p.tenant._id.toString() === tenant._id.toString() && (p.status === 'paid' || p.status === 'partial')
+      );
+      
+      const tenantPaid = tenantPayments.reduce((sum, p) => sum + p.amount, 0);
+      const remainingDue = expected - tenantPaid;
+
+      // If they haven't paid their full rent, add them to the Pending Dues list!
+      if (remainingDue > 0) {
+        pendingDuesAmount += remainingDue;
+        dynamicPendingDues.push({
+          _id: "due_" + tenant._id,
+          tenant: tenant,
+          building: tenant.building,
+          room: tenant.room,
+          amount: remainingDue, // Exact missing amount (e.g. 8000 - 7500 = 500)
+          status: "pending",
+          month,
+          year,
+          type: "rent"
+        });
+      }
+    });
+
+    res.json({
+      totalTenants,
+      activeTenants: activeTenantsList.length,
+      buildingCount,
+      totalRooms: allRooms.length,
+      totalBeds,
+      occupiedBeds,
+      vacantBeds,
+      openComplaints,
+      
+      // 🛑 The newly corrected financial data being sent to your frontend
+      expectedIncome: expectedRent,
+      totalIncome: totalIncome,
+      pendingDues: pendingDuesAmount,
+      pendingPaymentsCount: dynamicPendingDues.length,
+      pendingPayments: dynamicPendingDues.slice(0, 20), // Send top 20 to the UI
+      
       month,
       year,
     });
