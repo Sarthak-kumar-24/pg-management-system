@@ -94,6 +94,16 @@ function emptyState(icon, title, text) {
   return `<div class="empty"><div class="empty-ico">${icon}</div><h3>${title}</h3><p>${text}</p></div>`;
 }
 
+// Global Debounce Utility: Stops "machine-gun" firing of heavy functions
+window.debounce = function(func, timeout = 300) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+  };
+};
+
+
 // ─── THEME TOGGLE LOGIC (ADD THIS AT THE VERY BOTTOM) ───
 function toggleTheme() {
   const isLight = document.body.classList.toggle("light-mode");
