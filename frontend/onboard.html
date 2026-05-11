@@ -5,13 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PG Pro — Welcome Registration</title>
   <link rel="stylesheet" href="/css/styles.css" />
+  <script>
+    if (localStorage.getItem('pt_token') && localStorage.getItem('pt_tenant')) {
+        // Instantly redirect them to their dashboard before the registration form even loads
+        window.location.href = '/tenant.html'; 
+    }
+  </script>
 </head>
 <body style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;">
 
   <div class="card" style="max-width: 450px; width: 100%; animation: popIn 0.4s ease;">
     <div style="text-align: center; margin-bottom: 20px;">
       <div class="stat-ico ico-gold" style="font-size: 32px; width: 60px; height: 60px; margin: 0 auto 10px;">👋</div>
-      <h2 style="font-family: 'Playfair Display', serif;">Welcome to PG Pro</h2>
+      <h2 style="font-family: 'Playfair Display', serif;">Welcome to Prabhat PGs</h2>
       <p id="roomWelcomeText" class="c-muted tx-sm mt-2">Loading room details...</p>
     </div>
 
@@ -42,6 +48,12 @@
         Complete Registration
       </button>
     </form>
+    <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--b1);">
+      <p style="font-size: 13px; color: var(--tx2); margin-bottom: 10px;">Already registered in this room?</p>
+      <a href="/tenant.html" class="btn btn-sec btn-sm" style="text-decoration: none;">
+        Log In Here →
+      </a>
+    </div>
   </div>
 
   <script>
