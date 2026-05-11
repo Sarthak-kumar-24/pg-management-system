@@ -1127,7 +1127,7 @@ function renderProfile() {
       <div class="pf-label">${label}</div>
       <div class="${val ? 'pf-value' : 'pf-empty'}">${val || 'Not provided'}</div>
     </div>`;
-
+//  ${field('Room', t.room ? `Room ${t.room.roomNumber}, Floor ${t.room.floor}` : null)}
   document.getElementById('profileView').innerHTML = `
     <div class="sec-label">Contact & Stay</div>
     <div class="profile-grid">
@@ -1136,7 +1136,21 @@ function renderProfile() {
       ${field('Alternate Phone', t.alternatePhone)}
       ${field('Joining Date', fmtDate(t.joiningDate))}
       ${field('Building', t.building?.name)}
-      ${field('Room', t.room ? `Room ${t.room.roomNumber}, Floor ${t.room.floor}` : null)}
+      ${t.room ? `
+      <div class="profile-field">
+        <div class="pf-label">Room & Cleaning</div>
+        <div class="pf-value">
+          Room ${t.room.roomNumber}, Floor ${t.room.floor}
+          <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+            ${t.room.needsCleaning ? '<span class="badge b-red">⚠ Needs Clean</span>' : '<span class="badge b-green">✨ Clean</span>'}
+            <button class="btn btn-xs btn-sec" 
+              style="border-color: ${t.room.needsCleaning ? 'var(--green)' : 'var(--b2)'}; color: ${t.room.needsCleaning ? 'var(--green)' : 'var(--tx)'};" 
+              onclick="toggleCleaning('${t.room._id}', ${!!t.room.needsCleaning})">
+              ${t.room.needsCleaning ? '✓ Mark Clean' : '🧹 Request Clean'}
+            </button>
+          </div>
+        </div>
+      </div>` : field('Room', null)}
       ${field('Bed Number', t.bedNumber)}
       ${field('Status', t.status?.replace(/_/g,' '))}
     </div>
@@ -1168,7 +1182,31 @@ function renderProfile() {
     </div>` : ''}
   `;
 }
-
+/* ════════════════════════════════════════════════════════════════════════════
+   ROOM CLEANING TOGGLE (TENANT)
+════════════════════════════════════════════════════════════════════════════ */
+async function toggleCleaning(roomId, isCurrentlyCleaning) {
+  try {
+    const newStatus = !isCurrentlyCleaning;
+    
+    // 1. Tell the backend to update this room's status
+    await api('PUT', `/rooms/${roomId}`, { needsCleaning: newStatus });
+    
+    toast(newStatus ? 'Cleaning requested! 🧹' : 'Room marked as clean! ✨', 'ok');
+    
+    // 2. Instantly update the local portal data so the UI changes immediately
+    if (tenantData && tenantData.room) {
+      tenantData.room.needsCleaning = newStatus;
+      localStorage.setItem('pt_tenant', JSON.stringify(tenantData));
+    }
+    
+    // 3. Re-draw the profile tab to show the new badge
+    renderProfile();
+  } catch(err) {
+    toast('Error: ' + err.message, 'err');
+  }
+}
+  
 /* ════════════════════════════════════════════════════════════════════════════
    PAYMENTS VIEW
 ════════════════════════════════════════════════════════════════════════════ */
