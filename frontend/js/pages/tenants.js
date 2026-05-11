@@ -24,7 +24,7 @@ const Tenants = {
       toast(err.message, "err");
     }
   },
-
+/*
   render(list) {
     if (!list.length) {
       setHtml(
@@ -59,7 +59,63 @@ const Tenants = {
         .join("")}</div>`,
     );
   },
+*/
+   render(list) {
+    if (!list || !list.length) {
+      setHtml("tenantList", emptyState("👥", "No tenants found", "Adjust your filters or add a new tenant"));
+      return;
+    }
 
+    // Set the main container to an auto-filling grid for responsive cards
+    setHtml(
+      "tenantList",
+      `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px;">
+        ${list.map((t) => `
+          <div class="card" style="padding: 16px;">
+            <div class="flex gap-3">
+              
+              <div class="u-av" style="width: 56px; height: 56px; font-size: 22px; flex-shrink: 0;">
+                ${t.photo ? `<img src="${t.photo}" alt="" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">` : initials(t.name)}
+              </div>
+              
+              <div style="flex: 1; min-width: 0;">
+                
+                <div class="flex just-b items-start mb-2">
+                  <div style="min-width: 0; padding-right: 8px;">
+                    <div class="fw-7 tx-lg truncate">${t.name}</div>
+                    <div class="tx-xs mt-1">${idBadge(t.idVerified)}</div>
+                  </div>
+                  <div class="flex gap-1 flex-shrink-0">
+                    <button class="btn btn-xs btn-sec" title="View Profile" onclick="Tenants.view('${t._id}')">👁</button>
+                    <button class="btn btn-xs btn-blue" onclick="Tenants.openForm('${t._id}')">Edit</button>
+                    <button class="btn btn-xs btn-danger" onclick="Tenants.delete('${t._id}')">✕</button>
+                  </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin: 14px 0; font-size: 13px; color: var(--text-muted);">
+                  
+                  <div class="truncate" title="${t.phone}">📱 ${t.phone}</div>
+                  
+                  <div class="truncate">🗓 ${fmtDate(t.joiningDate)}</div>
+                  
+                  <div class="truncate" style="grid-column: 1 / -1;">
+                    🏠 ${t.building?.name || '—'} • Rm ${t.room?.roomNumber || '—'} • Bed ${t.bedNumber || '—'}
+                  </div>
+                  
+                </div>
+                
+                <div class="flex gap-2 flex-wrap">
+                  ${statusBadge(t.status)}
+                  ${statusBadge(t.behavior)}
+                </div>
+                
+              </div>
+            </div>
+          </div>
+        `).join("")}
+      </div>`
+    );
+  },
   async view(id) {
     setHtml("tenantProfileContent", spinner());
     openModal("moTenantProfile");
@@ -218,26 +274,7 @@ const Tenants = {
       await this.onRoomChange(selectedRoom);
     }
   },
-/*
-  async onRoomChange(roomId) {
-    const id = roomId || val("tRoom");
-    if (!id) return;
-    try {
-      const room = await Api.rooms.get(id);
-      setVal("tRent", val("tRent") || room.monthlyRent);
-      const sel = el("tBed");
-      if (!sel) return;
-      sel.innerHTML =
-        '<option value="">Select Bed</option>' +
-        room.beds
-          .map(
-            (b) =>
-              `<option value="${b.bedNumber}" ${b.isOccupied && b.tenant?._id !== this.editId ? "disabled" : ""}>${b.isOccupied ? "🔴" : "🟢"} Bed ${b.bedNumber}${b.isOccupied ? (b.tenant ? " — " + b.tenant.name : " — Occupied") : " — Free"}</option>`,
-          )
-          .join("");
-    } catch {}
-  },
-  */
+
    async onRoomChange(roomId) {
     // If 'roomId' is not passed, it means the user manually clicked the dropdown
     const isManualChange = !roomId; 
@@ -271,72 +308,7 @@ const Tenants = {
       sel.innerHTML = optionsHtml;
     } catch {}
   },
-/*
-  async save() {
-    const data = {
-      name: val("tName"),
-      phone: val("tPhone"),
-      email: val("tEmail"),
-      alternatePhone: val("tAltPhone"),
-      building: val("tBuilding"),
-      room: val("tRoom") || null,
-      bedNumber: +val("tBed") || null,
-      monthlyRent: +val("tRent"),
-      depositAmount: +val("tDeposit") || 0,
-      depositPaid: checked("tDepositPaid"),
-      joiningDate: val("tJoining"),
-      status: val("tStatus"),
-      behavior: val("tBehavior"),
-      idVerified: checked("tIdVerified"),
-      idType: val("tIdType"),
-      idNumber: val("tIdNumber"),
-      occupation: val("tOccupation"),
-      college: val("tOccupation") === "Student" ? val("tOrg") : "",
-      company: val("tOccupation") !== "Student" ? val("tOrg") : "",
-      notes: val("tNotes"),
-      emergencyContact: {
-        name: val("tEcName"),
-        phone: val("tEcPhone"),
-        relation: val("tEcRelation"),
-      },
-      address: {
-        permanent: val("tPermAddr"),
-        city: val("tCity"),
-        state: val("tState"),
-        pincode: val("tPincode"),
-      },
-    };
-    if (
-      !data.name ||
-      !data.phone ||
-      !data.building ||
-      !data.monthlyRent ||
-      !data.joiningDate
-    )
-      return toast(
-        "Name, phone, building, rent, joining date required",
-        "warn",
-      );
-     Object.keys(data).forEach((key) => {
-      if (data[key] === "") {
-        delete data[key];
-      }
-    });
-    try {
-      setBusy("tenantSaveBtn", true);
-      if (this.editId) await Api.tenants.update(this.editId, data);
-      else await Api.tenants.create(data);
-      toast(this.editId ? "Tenant updated" : "Tenant added", "ok");
-      Store.invalidate();
-      closeModal("moTenant");
-      this.load();
-    } catch (err) {
-      toast(err.message, "err");
-    } finally {
-      setBusy("tenantSaveBtn", false);
-    }
-  },
-*/
+
    async save() {
     // 1. Safely handle the Extra Bed string (e.g., convert "+3" into just 3)
     let bedVal = val("tBed");
