@@ -1,69 +1,20 @@
 /* ═══════════════════════════════════════════════════════════════
    payments.js
 ═══════════════════════════════════════════════════════════════ */
-/*
-const Payments = {
-  async load() {
-    setHtml("paymentList", spinner());
-    await Store.fillBuildings("#payBldgFilter");
-    try {
-      const now = new Date();
-      const q = {
-        building: val("payBldgFilter"),
-        status: val("payStatusFilter"),
-        type: val("payTypeFilter"),
-        month: val("payMonthFilter"),
-        year: val("payYearFilter") || now.getFullYear(),
-      };
-      const [list, stats] = await Promise.all([
-        Api.payments.list(q),
-        Api.payments.stats(q),
-      ]);
-      this.renderStats(stats);
-      this.renderList(list || []);
-    } catch (err) {
-      toast(err.message, "err");
-    }
-  },
 
-  renderStats(s) {
-    setText("payStatExpected", fmt(s?.totalExpected));
-    setText("payStatCollected", fmt(s?.totalCollected));
-    setText("payStatPending", fmt(s?.totalPending));
-    setText("payStatOverdue", s?.overdueCount ?? "—");
-  },
-  */
 const Payments = {
-   /*
-  async load() {
-    setHtml("paymentList", spinner());
-    await Store.fillBuildings("#payBldgFilter");
-    try {
-      const now = new Date();
-      const q = {
-        building: val("payBldgFilter"),
-        status: val("payStatusFilter"),
-        type: val("payTypeFilter"),
-        month: val("payMonthFilter"),
-        year: val("payYearFilter") || now.getFullYear(),
-      };
-      
-      // 🛑 THE FIX: Fetch the accurate financial stats from our newly updated Dashboard API
-      const [list, dashboardStats] = await Promise.all([
-        Api.payments.list(q),
-        Api.reports.dashboard(), 
-      ]);
-      
-      this.renderStats(dashboardStats);
-      this.renderList(list || []);
-    } catch (err) {
-      toast(err.message, "err");
-    }
-  },
-  */
+
    async load() {
     setHtml("paymentList", spinner());
-    await Store.fillBuildings("#payBldgFilter");
+      
+    //await Store.fillBuildings("#payBldgFilter");
+      // Pre-loads all form dropdowns in the background ONCE!
+    await Promise.all([
+      Store.fillBuildings("#payBldgFilter"),
+      Store.fillTenants("#pTenant"), // Loads the form dropdown
+      Store.fillBuildingsRequired("#pBuilding") // Loads the form dropdown
+    ]);
+      
     try {
       const now = new Date();
       const q = {
@@ -163,20 +114,78 @@ const Payments = {
     </table></div>`,
     );
   },
-
+/*
   async openForm() {
     el("payForm")?.reset();
     setVal("pYear", new Date().getFullYear());
     setVal("pMonth", new Date().getMonth() + 1);
+
+     
     await Promise.all([
       Store.fillTenants("#pTenant"),
       Store.fillBuildingsRequired("#pBuilding"),
     ]);
+     
     setText("payModalTitle", "Record Payment");
     el("pPayId") && setVal("pPayId", "");
     openModal("moPayment");
   },
+  */
+   /*
+   async openForm() {
+    el("payForm")?.reset();
+    setVal("pYear", new Date().getFullYear());
+    setVal("pMonth", new Date().getMonth() + 1);
 
+    // 🛑 STAGE 1 OPTIMIZATION: Removed the heavy Promise.all API calls.
+    // Since load() already populated the dropdowns, we just reset them to blank.
+    setVal("pTenant", ""); 
+    setVal("pBuilding", "");
+
+    setText("payModalTitle", "Record Payment");
+    el("pPayId") && setVal("pPayId", "");
+    openModal("moPayment");
+  },
+  */
+   async openForm() {
+    // 1. Standard HTML form reset
+    el("payForm")?.reset();
+    
+    // 2. 🛑 GHOST DATA FIX: Explicitly clear EVERY field manually 
+    // to guarantee no leftover data from the previous tenant!
+    setVal("pPayId", "");
+    setVal("pTenant", ""); 
+    setVal("pBuilding", "");
+    setVal("pAmount", "");
+    setVal("pTxnId", "");
+    setVal("pPaidOn", "");
+    setVal("pDueDate", "");
+    setVal("pNotes", "");
+
+    // 3. Set smart defaults for a new payment
+    setVal("pType", "rent"); 
+    setVal("pMethod", "cash"); 
+    setVal("pStatus", "paid"); 
+    setVal("pYear", new Date().getFullYear());
+    setVal("pMonth", new Date().getMonth() + 1);
+
+    setText("payModalTitle", "Record Payment");
+    openModal("moPayment");
+  },
+   // This is required for the virtual pending dues "+ Record" button to work.
+  async openVirtualForm(tenantId, bldgId, amount, month, year) {
+    await this.openForm(); // Opens the completely blank, ghost-free form
+    
+    // Auto-fill all known data for the missing rent
+    setVal("pTenant", tenantId);
+    setVal("pBuilding", bldgId);
+    setVal("pAmount", amount);
+    setVal("pMonth", month);
+    setVal("pYear", year);
+    setVal("pType", "rent");
+    setVal("pStatus", "paid");
+  },
+/*
   async openEditModal(id) {
     try {
       const p = await Api.payments.get(id);
@@ -198,6 +207,64 @@ const Payments = {
       setVal("pPaidOn", p.paidOn?.split("T")[0]);
       setVal("pDueDate", p.dueDate?.split("T")[0]);
       setVal("pNotes", p.notes);
+      openModal("moPayment");
+    } catch (err) {
+      toast(err.message, "err");
+    }
+  },
+  */
+   /*
+   async openEditModal(id) {
+    try {
+      // 🛑 STAGE 1 OPTIMIZATION: Only fetch this specific payment record.
+      // Removed the Store.fill dropdown fetchers to prevent DOM lag.
+      const p = await Api.payments.get(id);
+      
+      setText("payModalTitle", "Edit Payment");
+      setVal("pPayId", id);
+      
+      // Map the values directly into the pre-loaded dropdowns
+      setVal("pTenant", p.tenant?._id || p.tenant);
+      setVal("pBuilding", p.building?._id || p.building);
+      setVal("pAmount", p.amount);
+      setVal("pType", p.type);
+      setVal("pMonth", p.month);
+      setVal("pYear", p.year);
+      setVal("pMethod", p.paymentMethod);
+      setVal("pStatus", p.status);
+      setVal("pTxnId", p.transactionId);
+      setVal("pPaidOn", p.paidOn?.split("T")[0]);
+      setVal("pDueDate", p.dueDate?.split("T")[0]);
+      setVal("pNotes", p.notes);
+      
+      openModal("moPayment");
+    } catch (err) {
+      toast(err.message, "err");
+    }
+  },
+  */
+   async openEditModal(id) {
+    try {
+      // Stage 1 Optimization: Only fetch this specific payment record.
+      const p = await Api.payments.get(id);
+      
+      setText("payModalTitle", "Edit Payment");
+      setVal("pPayId", id);
+      
+      // Map the values directly into the pre-loaded dropdowns
+      setVal("pTenant", p.tenant?._id || p.tenant);
+      setVal("pBuilding", p.building?._id || p.building);
+      setVal("pAmount", p.amount);
+      setVal("pType", p.type);
+      setVal("pMonth", p.month);
+      setVal("pYear", p.year);
+      setVal("pMethod", p.paymentMethod);
+      setVal("pStatus", p.status);
+      setVal("pTxnId", p.transactionId);
+      setVal("pPaidOn", p.paidOn?.split("T")[0]);
+      setVal("pDueDate", p.dueDate?.split("T")[0]);
+      setVal("pNotes", p.notes);
+      
       openModal("moPayment");
     } catch (err) {
       toast(err.message, "err");
@@ -355,80 +422,7 @@ const Payments = {
       setBusy("elecSaveBtn", false);
     }
   },
-/*
-  async downloadReceipts() {
-    // 1. Ask for timeframe
-    const months = prompt("Enter number of months to download (1 to 5):", "1");
-    if (!months || isNaN(months) || months < 1 || months > 5) return;
 
-    try {
-      setBusy("bulkDownloadBtn", true);
-      const token = localStorage.getItem("pg_token");
-
-      // 2. Fetch and Download the PDF first
-      const res = await fetch("/api/payments/export", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ months: Number(months) })
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Download failed");
-      }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `receipts_${months}_months.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-
-      // 3. Temporarily remove the loading spinner so they can see the popup
-      setBusy("bulkDownloadBtn", false);
-
-      // 4. MANUAL DECISION: Ask the owner if they want to delete
-      const wantToDelete = await confirmAction(
-        "📄 PDF Downloaded successfully! \n\nDo you also want to permanently DELETE these older records from the database to save space?",
-        "Yes, Delete Records",
-        true
-      );
-
-      // 5. If they click yes, run the deletion
-      if (wantToDelete) {
-        setBusy("bulkDownloadBtn", true);
-        const delRes = await fetch("/api/payments/bulk", {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ months: Number(months) })
-        });
-        
-        const delData = await delRes.json();
-        if (!delRes.ok) throw new Error(delData.error);
-        
-        toast(delData.message, "ok");
-        this.load(); // Refresh the list
-      } else {
-        // If they click cancel
-        toast("Download complete. Database was not changed.", "ok");
-      }
-
-    } catch (err) {
-      toast(err.message, "err");
-    } finally {
-      setBusy("bulkDownloadBtn", false);
-    }
-  }
-  */
 
      async downloadReceipts() {
     // 1. Ask for timeframe
