@@ -24,7 +24,7 @@ exports.list = async (req, res, next) => {
        res.json(payments);
     
    } catch (err) {
-    //res.status(500).json({ error: err.message });
+    
     next(err);
   }
 };
@@ -39,7 +39,7 @@ exports.get = async (req, res, next) => {
     if (!p) return res.status(404).json({ error: "Payment not found" });
     res.json(p);
   } catch (err) {
-   // res.status(500).json({ error: err.message });
+  
     next(err);
   }
 };
@@ -58,7 +58,7 @@ exports.create = async (req, res, next) => {
     await payment.populate("room", "roomNumber");
     res.status(201).json(payment);
   } catch (err) {
-   // res.status(500).json({ error: err.message });
+  
     next(err);
   }
 };
@@ -67,7 +67,7 @@ exports.create = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
 
-    // 🛑 BULLETPROOF FIX: Clean empty strings
+    
     const data = { ...req.body };
     if (data.type === "") delete data.type;
     if (data.status === "") delete data.status;
@@ -83,7 +83,7 @@ exports.update = async (req, res, next) => {
     if (!payment) return res.status(404).json({ error: "Payment not found" });
     res.json(payment);
   } catch (err) {
-    //res.status(500).json({ error: err.message });
+    
     next(err);
   }
 };
@@ -94,7 +94,7 @@ exports.remove = async (req, res, next) => {
     await Payment.findByIdAndDelete(req.params.id);
     res.json({ message: "Payment deleted" });
   } catch (err) {
-    //res.status(500).json({ error: err.message });
+   
     next(err);
   }
 };
@@ -136,7 +136,7 @@ exports.generateMonthly = async (req, res, next) => {
       count: created.length,
     });
   } catch (err) {
-    //res.status(500).json({ error: err.message });
+  
     next(err);
   }
 };
@@ -145,26 +145,17 @@ exports.generateMonthly = async (req, res, next) => {
 exports.stats = async (req, res, next) => {
   try {
     const now = new Date();
-   // const month = Number(req.query.month) || now.getMonth() + 1;
+   
     const year = Number(req.query.year) || now.getFullYear();
-    //const filter = { type: "rent", month, year };
+    
 
     const filter = { type: "rent", year };
 
     if (req.query.month) filter.month = Number(req.query.month);
     if (req.query.building) filter.building = req.query.building;
-    //const payments = await Payment.find(filter);
+    
     const payments = await Payment.find(filter).lean();
-    /*
-    const totalExpected = payments.reduce((s, p) => s + p.amount, 0);
-    const totalCollected = payments
-      .filter((p) => p.status === "paid")
-      .reduce((s, p) => s + p.amount, 0);
-    const totalPending = payments
-      .filter((p) => p.status !== "paid")
-      .reduce((s, p) => s + p.amount, 0);
-    const overdueCount = payments.filter((p) => p.status === "overdue").length;
-    */
+
     let totalExpected = 0;
     let totalCollected = 0;
     let totalPending = 0;
@@ -189,12 +180,11 @@ exports.stats = async (req, res, next) => {
       totalCollected,
       totalPending,
       overdueCount,
-      //month,
       month: req.query.month || "All",
       year,
     });
   } catch (err) {
-   // res.status(500).json({ error: err.message });
+  
     next(err);
   }
 };
@@ -246,52 +236,7 @@ exports.addElectricity = async (req, res, next) => {
     next(err);
   }
 };
-/*
-// POST /api/payments/export — Download PDF ONLY
-exports.exportPdf = async (req, res, next) => {
-  try {
-    const { months } = req.body;
-    if (!months || months < 1 || months > 5) {
-      return res.status(400).json({ error: "Please specify between 1 and 5 months." });
-    }
 
-    const dateLimit = new Date();
-    dateLimit.setMonth(dateLimit.getMonth() - months);
-
-    const payments = await Payment.find({ createdAt: { $gte: dateLimit } })
-      .populate("tenant", "name phone")
-      .populate("room", "roomNumber")
-      .populate("building", "name");
-
-    if (!payments.length) return res.status(404).json({ error: "No receipts found for this period." });
-
-    const doc = new PDFDocument({ margin: 50 });
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="receipts_last_${months}_months.pdf"`);
-    doc.pipe(res);
-
-    doc.fontSize(20).text(`PG Receipts (Last ${months} Months)`, { align: "center" });
-    doc.moveDown(2);
-
-    for (const p of payments) {
-      doc.fontSize(14).text(`Receipt: ${p.receiptNumber || "N/A"}`, { underline: true });
-      doc.fontSize(12).text(`Date: ${p.paidOn ? p.paidOn.toISOString().split("T")[0] : "—"}`);
-      doc.text(`Tenant: ${p.tenant?.name || "—"} (${p.tenant?.phone || "—"})`);
-      doc.text(`Building: ${p.building?.name || "—"} | Room: ${p.room?.roomNumber || "—"}`);
-      doc.text(`Type: ${p.type.toUpperCase()} | Method: ${p.paymentMethod.toUpperCase()}`);
-      doc.text(`Status: ${p.status.toUpperCase()} | Amount: Rs. ${p.amount}`);
-      doc.moveDown();
-      doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-      doc.moveDown();
-    }
-    
-    // 🛑 NOTICE: We removed the auto-delete logic from here!
-    doc.end();
-  } catch (err) {
-    next(err);
-  }
-};
-*/
 // POST /api/payments/export — Download PDF ONLY (Table Format)
 exports.exportPdf = async (req, res, next) => {
   try {
