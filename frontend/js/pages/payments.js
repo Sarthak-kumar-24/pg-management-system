@@ -4,6 +4,11 @@
 
 const Payments = {
 
+   // Use this for any typing inputs or fast filters!
+  delayedLoad: debounce(function() {
+    Payments.load();
+  }, 300), // Waits 300ms after you stop typing
+
    async load() {
     setHtml("paymentList", spinner());
       
