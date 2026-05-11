@@ -2,6 +2,10 @@
    tenants.js
 ═══════════════════════════════════════════════════════════════ */
 const Tenants = {
+   delayedLoad: window.debounce(function() {
+    Tenants.load();
+  }, 300),
+   
   editId: null,
 
   async load() {
