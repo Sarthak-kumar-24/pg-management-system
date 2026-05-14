@@ -2,6 +2,9 @@
    documents.js
 ═══════════════════════════════════════════════════════════════ */
 const Documents = {
+
+   liveTimer: null,
+   
   async load() {
     setHtml('documentList', spinner());
     await Promise.all([
@@ -19,6 +22,43 @@ const Documents = {
     } catch (err) { 
        toast(err.message, 'err');
     }
+  },
+
+   async silentLoad() {
+    try {
+      const q = {
+        building: val("docBldgFilter"),
+        tenant: val("docTenantFilter"),
+        type: val("docTypeFilter"),
+      };
+      const list = await Api.documents.list(q);
+      
+      // Only re-render if the user hasn't opened a modal (so we don't interrupt them)
+      if (!document.getElementById("moDocument")?.classList.contains("open")) {
+         this.render(list || []);
+      }
+    } catch (err) {
+      // Ignore errors silently in the background
+    }
+  },
+
+  // 🛑 THE NEW FUNCTION: Sets up the 5-second polling loop
+  initLiveUpdates() {
+    // Destroy any existing "ghost" timers before starting a new one to prevent memory leaks
+    if (this.liveTimer) clearInterval(this.liveTimer);
+
+    this.liveTimer = setInterval(() => {
+      
+      // 🛑 3. Smart Checks: Is the PG Pro tab open? Is the browser window currently visible?
+      const isPageActive = document.getElementById("page-documents")?.classList.contains("active");
+      const isBrowserVisible = !document.hidden;
+
+      // Only execute the database fetch if BOTH are true!
+      if (isPageActive && isBrowserVisible) {
+        this.silentLoad();
+      }
+      
+    }, 5000);
   },
 
   render(list) {
