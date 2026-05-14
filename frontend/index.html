@@ -1239,7 +1239,9 @@
             ✕
           </button>
         </div>
-        <div class="mo-body">
+      <!--  <div class="mo-body">-->
+        <form id="bldgForm" class="mo-body" onsubmit="return false;">
+          <input type="hidden" id="bId" />
           <div class="fr">
             <div class="fg">
               <label class="fl">Name *</label
@@ -1301,7 +1303,8 @@
             <label class="fl">Description</label
             ><textarea id="bDesc" class="fc"></textarea>
           </div>
-        </div>
+       <!-- </div>-->
+        </form>
         <div class="mo-foot">
           <button class="btn btn-sec" onclick="closeModal('moBuilding')">
             Cancel</button
@@ -1323,7 +1326,9 @@
           <span class="mo-title" id="roomModalTitle">Add Room</span
           ><button class="mo-close" onclick="closeModal('moRoom')">✕</button>
         </div>
-        <div class="mo-body">
+      <!--  <div class="mo-body">-->
+        <form id="roomForm" class="mo-body" onsubmit="return false;">
+          <input type="hidden" id="rId" />
           <div class="fr">
             <div class="fg">
               <label class="fl">Building *</label
@@ -1401,7 +1406,8 @@
             <label class="fl">Description</label
             ><textarea id="rDesc" class="fc"></textarea>
           </div>
-        </div>
+       <!-- </div>-->
+        </form>
         <div class="mo-foot">
           <button class="btn btn-sec" onclick="closeModal('moRoom')">
             Cancel</button
@@ -1444,7 +1450,9 @@
           <span class="mo-title" id="tenantModalTitle">Add Tenant</span
           ><button class="mo-close" onclick="closeModal('moTenant')">✕</button>
         </div>
-        <div class="mo-body">
+      <!--  <div class="mo-body">-->
+        <form id="tenantForm" class="mo-body" onsubmit="return false;">
+          <input type="hidden" id="tId" />
           <div class="tabs">
             <button
               class="tab-btn active"
@@ -1683,7 +1691,8 @@
               >
             </div>
           </div>
-        </div>
+       <!-- </div>-->
+        </form>
         <div class="mo-foot">
           <button class="btn btn-sec" onclick="closeModal('moTenant')">
             Cancel</button
@@ -1720,7 +1729,9 @@
           <span class="mo-title" id="payModalTitle">Record Payment</span
           ><button class="mo-close" onclick="closeModal('moPayment')">✕</button>
         </div>
-        <div class="mo-body">
+       <!-- <div class="mo-body"> -->
+        <form id="payForm" class="mo-body" onsubmit="return false;">
+          <input type="hidden" id="pPayId" />
           <div class="fr">
             <div class="fg">
               <label class="fl">Tenant *</label
@@ -1819,7 +1830,8 @@
             <label class="fl">Notes</label
             ><textarea id="pNotes" class="fc"></textarea>
           </div>
-        </div>
+        <!--</div>-->
+          </form>
         <div class="mo-foot">
           <button class="btn btn-sec" onclick="closeModal('moPayment')">
             Cancel</button
