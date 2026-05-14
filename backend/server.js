@@ -1,4 +1,5 @@
 const express = require("express");
+const startCronJobs = require('./routes/cronJobs');
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
@@ -9,6 +10,8 @@ const app = express();
 
 // ── DB ──────────────────────────────────────────────────────────
 connectDB();
+startCronJobs();
+
 
 // ── Middleware ───────────────────────────────────────────────────
 app.use(cors({ origin: "*", credentials: true }));
