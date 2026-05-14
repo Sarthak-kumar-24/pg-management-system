@@ -483,6 +483,13 @@ textarea.fc { resize:vertical; min-height:90px; }
 
 <!-- ═══════════════════════════ PORTAL PAGE ══════════════════════════════ -->
 <div id="portalPage">
+
+  <div id="globalDuesBanner" style="display: none; background: rgba(248,113,113,.15); border-bottom: 1px solid rgba(248,113,113,.3); padding: 10px 24px; align-items: center; justify-content: space-between; position: sticky; top: 62px; z-index: 190; backdrop-filter: blur(12px);">
+    <div style="font-size: 13px; color: var(--red); font-weight: 600; display: flex; align-items: center; gap: 8px;">
+      <span>⚠️</span> <span>Pending Dues: <span id="globalDuesAmount">₹0</span></span>
+    </div>
+    <button class="btn btn-xs btn-danger" onclick="switchSection('profile', document.querySelector('[data-sec=\\'profile\\']'))" style="background: var(--red); color: #fff; border: none;">Pay Now</button>
+  </div>
   <div class="portal-wrap">
 
     <!-- Hero Card -->
@@ -798,6 +805,32 @@ textarea.fc { resize:vertical; min-height:90px; }
   </div>
 </div>
 
+  <!---- Dues Notification --->
+
+  <div class="mo" id="moDuesAlert">
+  <div class="mo-box mo-sm" style="border: 1px solid var(--red); box-shadow: 0 20px 60px rgba(248,113,113,.15);">
+    <div class="mo-hdr" style="background: rgba(248,113,113,.1);">
+      <span class="mo-title c-red flex items-c gap-2">🚨 Payment Reminder</span>
+      <button class="mo-close" onclick="closeModal('moDuesAlert')">✕</button>
+    </div>
+    <div class="mo-body" style="text-align: center; padding: 30px 20px;">
+      <div style="font-size: 50px; margin-bottom: 10px;">💸</div>
+      <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 8px;">Pending Dues Detected</h3>
+      <p class="c-muted tx-sm mb-3">You currently have an outstanding balance of:</p>
+      <div class="c-red fw-7 font-s" id="duesAlertAmount" style="font-size: 32px; margin-bottom: 20px;">₹0</div>
+      <p class="tx-sm" style="line-height: 1.6;">
+        Please clear your dues as soon as possible to avoid late penalty charges. 
+        You can view the full breakdown in your <b>Profile tab</b>.
+      </p>
+    </div>
+    <div class="mo-foot">
+      <button class="btn btn-primary w-full" onclick="closeModal('moDuesAlert'); switchSection('profile', document.querySelector('[data-sec=\\'profile\\']'));" style="justify-content: center;">
+        View My Payments →
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast container -->
 <div class="tw" id="toastWrap"></div>
 
@@ -928,61 +961,7 @@ function validateField(id, errId, check) {
   return ok;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   LOGIN FLOW
-════════════════════════════════════════════════════════════════════════════ */
-  /*
-let foundTenant = null;
-let foundTenantToken = null;
 
-async function findTenant() {
-  const phone = document.getElementById('loginPhone').value.trim();
-  if (!validatePhone(document.getElementById('loginPhone'))) return;
-
-  const btn = document.getElementById('findBtn');
-  btn.classList.add('btn-loading'); btn.textContent = 'Searching…';
-
-  try {
-    const results = await api('GET', `/tenants?search=${encodeURIComponent(phone)}`);
-    const tenant  = results.find(t => t.phone.replace(/\D/g,'').includes(phone.replace(/\D/g,'')));
-
-    if (!tenant) {
-      toast('No account found with this number. Contact your PG owner.', 'err', 5000);
-      return;
-    }
-
-    foundTenant = tenant;
-    document.getElementById('ftAvatar').textContent = initials(tenant.name);
-    document.getElementById('ftName').textContent   = tenant.name;
-    document.getElementById('ftRoom').textContent   = `${tenant.building?.name || '—'} · Room ${tenant.room?.roomNumber || '—'}`;
-
-    document.getElementById('step1').classList.add('hidden');
-    document.getElementById('step2').classList.remove('hidden');
-    document.getElementById('dot1').classList.remove('active'); document.getElementById('dot1').classList.add('done');
-    document.getElementById('dot2').classList.add('active');
-    document.getElementById('confirmPin').focus();
-
-  } catch (err) {
-    toast('Error: ' + err.message, 'err');
-  } finally {
-    btn.classList.remove('btn-loading'); btn.textContent = 'Find My Account →';
-  }
-}
-
-function confirmLogin() {
-  const pin   = document.getElementById('confirmPin').value;
-  const phone = foundTenant.phone.replace(/\D/g,'');
-  if (pin.length < 4 || !phone.endsWith(pin)) {
-    document.getElementById('pinErr').classList.add('show');
-    document.getElementById('confirmPin').classList.add('error');
-    return;
-  }
-  document.getElementById('pinErr').classList.remove('show');
-  // Store tenant session (simple – no real auth needed for tenant view)
-  localStorage.setItem('pt_tenant', JSON.stringify(foundTenant));
-  startPortal(foundTenant);
-}
-*/
 let foundTenant = null;
 let foundTenantToken = null; // 🛑 We must save the token temporarily
 
@@ -1067,8 +1046,59 @@ async function startPortal(tenant) {
   renderProfile();
   renderPayments();
   loadNotices(); // preload notices
+  checkPendingDuesReminder();
 }
+/* ════════════════════════════════════════════════════════════════════════════
+   AUTOMATED DUES REMINDER (SMART POLLER + STICKY BANNER)
+════════════════════════════════════════════════════════════════════════════ */
+function checkPendingDuesReminder() {
+  if (!tenantData || !tenantData.payments) return;
 
+  // 1. Calculate their total pending amount (Rent + Bills + etc.)
+  const pendingAmount = tenantData.payments
+    .filter(p => p.status !== 'paid')
+    .reduce((sum, p) => sum + p.amount, 0);
+
+  // 2. If they owe money, show the Sticky Banner 24/7 on ALL tabs!
+  if (pendingAmount > 0) {
+    const banner = document.getElementById('globalDuesBanner');
+    if (banner) {
+      banner.style.display = 'flex';
+      document.getElementById('globalDuesAmount').textContent = fmtCur(pendingAmount);
+    }
+
+    // 3. The 5-Day Popup Logic (Only triggers after the 10th of the month)
+    const today = new Date();
+    if (today.getDate() > 10) {
+      const lastNoticeStr = localStorage.getItem('pt_last_due_notice');
+      const fiveDaysInMs = 5 * 24 * 60 * 60 * 1000; 
+
+      let shouldShow = false;
+      
+      if (!lastNoticeStr) {
+        shouldShow = true; // Never shown before
+      } else {
+        const timeSinceLastNotice = today.getTime() - parseInt(lastNoticeStr);
+        if (timeSinceLastNotice >= fiveDaysInMs) {
+          shouldShow = true; // It has been 5 days!
+        }
+      }
+
+      // Trigger the popup!
+      if (shouldShow) {
+        document.getElementById('duesAlertAmount').textContent = fmtCur(pendingAmount);
+        setTimeout(() => {
+          openModal('moDuesAlert');
+          localStorage.setItem('pt_last_due_notice', today.getTime().toString());
+        }, 1000); 
+      }
+    }
+  } else {
+    // If they owe nothing, ensure the banner is hidden
+    const banner = document.getElementById('globalDuesBanner');
+    if (banner) banner.style.display = 'none';
+  }
+}
 /* ════════════════════════════════════════════════════════════════════════════
    HERO
 ════════════════════════════════════════════════════════════════════════════ */
