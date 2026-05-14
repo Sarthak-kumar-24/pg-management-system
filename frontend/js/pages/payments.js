@@ -221,7 +221,7 @@ const Payments = {
     }
   },
   */
-
+/*
    async save() {
     const existingId = val("pPayId");
     
@@ -326,6 +326,148 @@ const Payments = {
                   headers: {'Content-Type':'application/json', "Authorization": `Bearer ${token}`}, 
                   body: JSON.stringify({status:'paid'}) 
                 }); 
+              } catch(e){}
+            }
+          }
+
+          // Subtract the money we just applied, and bump the calendar forward 1 month
+          remainingAmount -= amountToApply;
+          currentMonthNum++;
+          
+          if (currentMonthNum > 12) {
+            currentMonthNum = 1;
+            currentYearNum++;
+          }
+        }
+        
+        toast("Payment recorded & smartly split! ✨", "ok");
+      }
+
+      closeModal("moPayment");
+      this.load();
+      
+    } catch (err) {
+      toast(err.message, "err");
+    } finally {
+      setBusy("paySaveBtn", false);
+    }
+  },
+  */
+   async save() {
+    const existingId = val("pPayId");
+    
+    // 1. GATHER & CLEAN THE AMOUNT (Removes commas so '15,000' becomes 15000)
+    const rawAmount = val("pAmount") || "";
+    const cleanAmount = Number(rawAmount.replace(/,/g, '')) || 0;
+
+    const data = {
+      tenant: val("pTenant"),
+      building: val("pBuilding"),
+      amount: cleanAmount, 
+      type: val("pType"),
+      month: Number(val("pMonth")),
+      year: Number(val("pYear")),
+      paymentMethod: val("pMethod"),
+      status: val("pStatus"),
+      transactionId: val("pTxnId"),
+      paidOn: val("pPaidOn") || new Date().toISOString(),
+      dueDate: val("pDueDate") || null,
+      notes: val("pNotes"),
+    };
+
+    if (!data.tenant || data.amount <= 0) {
+      return toast("Tenant and a valid amount are required", "warn");
+    }
+
+    try {
+      setBusy("paySaveBtn", true);
+
+      // ════════════════════════════════════════════════════════════
+      // SCENARIO A: EDITING AN EXISTING PAYMENT 
+      // ════════════════════════════════════════════════════════════
+      if (existingId) {
+        await Api.payments.update(existingId, data);
+        toast("Payment updated", "ok");
+      } 
+      
+      // ════════════════════════════════════════════════════════════
+      // SCENARIO B: NEW PAYMENT (The Smart Splitter Logic ✨)
+      // ════════════════════════════════════════════════════════════
+      else {
+        // 1. SAFE FETCH: Tenant Rent
+        let monthlyRent = 0;
+        try {
+          const tenant = await Api.tenants.get(data.tenant);
+          monthlyRent = Number(tenant?.monthlyRent) || 0;
+        } catch (e) {
+          console.warn("Could not fetch tenant rent, defaulting to 0");
+        }
+
+        // 2. SAFE FETCH: Pending Bills
+        let unpaidBills = [];
+        let totalBillsDue = 0;
+        try {
+          const token = localStorage.getItem("pg_token") || localStorage.getItem("pt_token");
+          const res = await fetch(`/api/bills?tenant=${data.tenant}&month=${data.month}&year=${data.year}&status=unpaid`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const fetchedBills = await res.json();
+            if (Array.isArray(fetchedBills)) {
+              unpaidBills = fetchedBills;
+              totalBillsDue = unpaidBills.reduce((sum, b) => sum + (Number(b?.amount) || 0), 0);
+            }
+          }
+        } catch (e) {}
+
+        let currentMonthNum = data.month;
+        let currentYearNum = data.year;
+        let remainingAmount = data.amount;
+
+        // 3. SMART SPLIT LOOP
+        while (remainingAmount > 0) {
+          
+          const isFirstMonth = (currentMonthNum === data.month && currentYearNum === data.year);
+
+          // Calculate exact due for this loop step
+          let amountDueThisMonth = isFirstMonth ? (monthlyRent + totalBillsDue) : monthlyRent;
+          amountDueThisMonth = Number(amountDueThisMonth) || 0;
+
+          // Fail-safe: If rent/bills evaluate to 0, dump all remaining money here to prevent infinite loop
+          if (amountDueThisMonth <= 0) {
+            amountDueThisMonth = remainingAmount;
+          }
+
+          // Calculate slice
+          let amountToApply = Math.min(remainingAmount, amountDueThisMonth);
+          let calculatedStatus = (amountToApply >= amountDueThisMonth) ? "paid" : "partial";
+
+          // CREATE SPLIT RECORD (Explicit payload mapping prevents missing fields)
+          await Api.payments.create({
+            tenant: data.tenant,
+            building: data.building,
+            amount: amountToApply,
+            type: data.type,
+            month: currentMonthNum,
+            year: currentYearNum,
+            paymentMethod: data.paymentMethod,
+            status: calculatedStatus,
+            transactionId: data.transactionId,
+            paidOn: data.paidOn,
+            dueDate: data.dueDate,
+            notes: data.notes
+          });
+
+          // Mark bills as paid ONLY if we had enough to cover them in the first month
+          if (isFirstMonth && totalBillsDue > 0 && amountToApply >= totalBillsDue) {
+            for (let b of unpaidBills) {
+              try {
+                const token = localStorage.getItem("pg_token") || localStorage.getItem("pt_token");
+                await fetch(`/api/bills/${b._id}`, {
+                  method: 'PUT',
+                  headers: {'Content-Type':'application/json', "Authorization": `Bearer ${token}`},
+                  body: JSON.stringify({ status: 'paid' })
+                });
               } catch(e){}
             }
           }
