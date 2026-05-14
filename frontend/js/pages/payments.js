@@ -119,39 +119,7 @@ const Payments = {
     </table></div>`,
     );
   },
-/*
-  async openForm() {
-    el("payForm")?.reset();
-    setVal("pYear", new Date().getFullYear());
-    setVal("pMonth", new Date().getMonth() + 1);
 
-     
-    await Promise.all([
-      Store.fillTenants("#pTenant"),
-      Store.fillBuildingsRequired("#pBuilding"),
-    ]);
-     
-    setText("payModalTitle", "Record Payment");
-    el("pPayId") && setVal("pPayId", "");
-    openModal("moPayment");
-  },
-  */
-   /*
-   async openForm() {
-    el("payForm")?.reset();
-    setVal("pYear", new Date().getFullYear());
-    setVal("pMonth", new Date().getMonth() + 1);
-
-    // 🛑 STAGE 1 OPTIMIZATION: Removed the heavy Promise.all API calls.
-    // Since load() already populated the dropdowns, we just reset them to blank.
-    setVal("pTenant", ""); 
-    setVal("pBuilding", "");
-
-    setText("payModalTitle", "Record Payment");
-    el("pPayId") && setVal("pPayId", "");
-    openModal("moPayment");
-  },
-  */
    async openForm() {
     // 1. Standard HTML form reset
     el("payForm")?.reset();
@@ -190,64 +158,7 @@ const Payments = {
     setVal("pType", "rent");
     setVal("pStatus", "paid");
   },
-/*
-  async openEditModal(id) {
-    try {
-      const p = await Api.payments.get(id);
-      await Promise.all([
-        Store.fillTenants("#pTenant"),
-        Store.fillBuildingsRequired("#pBuilding"),
-      ]);
-      setText("payModalTitle", "Edit Payment");
-      setVal("pPayId", id);
-      setVal("pTenant", p.tenant?._id || p.tenant);
-      setVal("pBuilding", p.building?._id || p.building);
-      setVal("pAmount", p.amount);
-      setVal("pType", p.type);
-      setVal("pMonth", p.month);
-      setVal("pYear", p.year);
-      setVal("pMethod", p.paymentMethod);
-      setVal("pStatus", p.status);
-      setVal("pTxnId", p.transactionId);
-      setVal("pPaidOn", p.paidOn?.split("T")[0]);
-      setVal("pDueDate", p.dueDate?.split("T")[0]);
-      setVal("pNotes", p.notes);
-      openModal("moPayment");
-    } catch (err) {
-      toast(err.message, "err");
-    }
-  },
-  */
-   /*
-   async openEditModal(id) {
-    try {
-      // 🛑 STAGE 1 OPTIMIZATION: Only fetch this specific payment record.
-      // Removed the Store.fill dropdown fetchers to prevent DOM lag.
-      const p = await Api.payments.get(id);
-      
-      setText("payModalTitle", "Edit Payment");
-      setVal("pPayId", id);
-      
-      // Map the values directly into the pre-loaded dropdowns
-      setVal("pTenant", p.tenant?._id || p.tenant);
-      setVal("pBuilding", p.building?._id || p.building);
-      setVal("pAmount", p.amount);
-      setVal("pType", p.type);
-      setVal("pMonth", p.month);
-      setVal("pYear", p.year);
-      setVal("pMethod", p.paymentMethod);
-      setVal("pStatus", p.status);
-      setVal("pTxnId", p.transactionId);
-      setVal("pPaidOn", p.paidOn?.split("T")[0]);
-      setVal("pDueDate", p.dueDate?.split("T")[0]);
-      setVal("pNotes", p.notes);
-      
-      openModal("moPayment");
-    } catch (err) {
-      toast(err.message, "err");
-    }
-  },
-  */
+
    async openEditModal(id) {
     try {
       // Stage 1 Optimization: Only fetch this specific payment record.
@@ -275,7 +186,7 @@ const Payments = {
       toast(err.message, "err");
     }
   },
-
+/*
   async save() {
     const existingId = val("pPayId");
     const data = {
@@ -303,6 +214,138 @@ const Payments = {
       toast(existingId ? "Payment updated" : "Payment recorded", "ok");
       closeModal("moPayment");
       this.load();
+    } catch (err) {
+      toast(err.message, "err");
+    } finally {
+      setBusy("paySaveBtn", false);
+    }
+  },
+  */
+
+   async save() {
+    const existingId = val("pPayId");
+    
+    // 1. Gather all your custom data from the form
+    const data = {
+      tenant: val("pTenant"),
+      building: val("pBuilding"),
+      amount: +val("pAmount"), // This is the total amount (e.g., 15000)
+      type: val("pType"),
+      month: +val("pMonth"),
+      year: +val("pYear"),
+      paymentMethod: val("pMethod"),
+      status: val("pStatus"),
+      transactionId: val("pTxnId"),
+      paidOn: val("pPaidOn") || null,
+      dueDate: val("pDueDate") || null,
+      notes: val("pNotes"),
+    };
+
+    if (!data.tenant || !data.amount)
+      return toast("Tenant and amount required", "warn");
+      
+    if (data.status === "paid" && !data.paidOn)
+      data.paidOn = new Date().toISOString();
+
+    try {
+      setBusy("paySaveBtn", true);
+
+      // ════════════════════════════════════════════════════════════
+      // SCENARIO A: EDITING AN EXISTING PAYMENT 
+      // (We do not split. We just update the single row exactly as you had it)
+      // ════════════════════════════════════════════════════════════
+      if (existingId) {
+        await Api.payments.update(existingId, data);
+        toast("Payment updated", "ok");
+      } 
+      
+      // ════════════════════════════════════════════════════════════
+      // SCENARIO B: NEW PAYMENT (The Smart Splitter Logic ✨)
+      // ════════════════════════════════════════════════════════════
+      else {
+        // 1. Fetch exact rent for this specific tenant
+        const tenant = await Api.tenants.get(data.tenant);
+        const monthlyRent = tenant.monthlyRent || 0;
+
+        // 2. Fetch pending bills for the selected starting month
+        let unpaidBills = [];
+        const token = localStorage.getItem("pg_token") || localStorage.getItem("pt_token");
+        try {
+          const res = await fetch(`/api/bills?tenant=${data.tenant}&month=${data.month}&year=${data.year}&status=unpaid`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (res.ok) unpaidBills = await res.json();
+        } catch (e) {}
+
+        const totalBillsDue = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
+
+        let currentMonthNum = data.month;
+        let currentYearNum = data.year;
+        let remainingAmount = data.amount; // Start slicing the 15,000
+
+        // 3. Loop and split!
+        while (remainingAmount > 0) {
+          
+          // Only charge the extra Bills on the FIRST month. Future carry-over months are just Rent.
+          const isFirstMonth = (currentMonthNum === data.month && currentYearNum === data.year);
+          const amountDueThisMonth = isFirstMonth ? (monthlyRent + totalBillsDue) : monthlyRent;
+
+          // Fallback: If rent is somehow 0, dump all remaining money here and stop looping
+          if (amountDueThisMonth <= 0) {
+             await Api.payments.create({
+               ...data, // Keeps your notes, txnId, etc.
+               amount: remainingAmount,
+               month: currentMonthNum,
+               year: currentYearNum,
+               status: "paid",
+               paidOn: data.paidOn || new Date().toISOString()
+             });
+             break; 
+          }
+
+          // Calculate how much to drop in this specific month
+          let amountToApply = Math.min(remainingAmount, amountDueThisMonth);
+          let calculatedStatus = (amountToApply >= amountDueThisMonth) ? "paid" : "partial";
+
+          // Create the split record!
+          await Api.payments.create({
+            ...data, // Brings over building, type, paymentMethod, transactionId, notes, dueDate
+            amount: amountToApply,
+            month: currentMonthNum,
+            year: currentYearNum,
+            status: calculatedStatus,
+            paidOn: data.paidOn || new Date().toISOString()
+          });
+
+          // Automatically mark their electricity/food bills as 'paid' in the DB if we covered them
+          if (isFirstMonth && totalBillsDue > 0 && amountToApply >= totalBillsDue) {
+            for (let b of unpaidBills) {
+              try { 
+                await fetch(`/api/bills/${b._id}`, { 
+                  method: 'PUT', 
+                  headers: {'Content-Type':'application/json', "Authorization": `Bearer ${token}`}, 
+                  body: JSON.stringify({status:'paid'}) 
+                }); 
+              } catch(e){}
+            }
+          }
+
+          // Subtract the money we just applied, and bump the calendar forward 1 month
+          remainingAmount -= amountToApply;
+          currentMonthNum++;
+          
+          if (currentMonthNum > 12) {
+            currentMonthNum = 1;
+            currentYearNum++;
+          }
+        }
+        
+        toast("Payment recorded & smartly split! ✨", "ok");
+      }
+
+      closeModal("moPayment");
+      this.load();
+      
     } catch (err) {
       toast(err.message, "err");
     } finally {
