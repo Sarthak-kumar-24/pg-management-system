@@ -39,7 +39,7 @@ const Tenants = {
           <div class="card" style="padding: 16px;">
             <div class="flex gap-3">
               
-              // 🛑 Added id="avatar-${t._id}" to the container
+             
               <div class="u-av" id="avatar-${t._id}" style="width: 56px; height: 56px; font-size: 22px; flex-shrink: 0;">
                  ${t.photo ? `<img src="${t.photo}" alt="" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">` : initials(t.name)}
               </div>
