@@ -33,9 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Set default year values in filters ───────────────────────
-  const yr = new Date().getFullYear().toString();
-  document.querySelectorAll('.cur-year').forEach(e => { if (e.tagName === 'SELECT') e.value = yr; else e.textContent = yr; });
+  //const yr = new Date().getFullYear().toString();
+  //document.querySelectorAll('.cur-year').forEach(e => { if (e.tagName === 'SELECT') e.value = yr; else e.textContent = yr; });
+  // ── Set default year values in filters ───────────────────────
+  initYearDropdowns();
 
+   
   // ── Initial data: fill all building selects ──────────────────
   Store.loadBuildings().then(() => {
     Store.fillBuildings('.sel-building');
