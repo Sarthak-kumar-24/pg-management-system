@@ -25,6 +25,11 @@ const tenantSchema = new mongoose.Schema(
       enum: ["active", "notice_period", "vacated"],
       default: "active",
     },
+    // Inside your Tenant schema
+    profilePicture: {
+       type: String,
+       default: "" // Defaults to empty so we know to show the initials
+    },
     behavior: {
       type: String,
       enum: ["disciplined", "moderate", "mischief"],
