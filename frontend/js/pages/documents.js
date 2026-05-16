@@ -60,6 +60,7 @@ const Documents = {
       
     }, 5000);
   },
+   /*
 render(list) {
     if (!list.length) {
       setHtml('documentList', emptyState('📁', 'No documents', 'Upload ID proofs, agreements, and receipts'));
@@ -91,6 +92,68 @@ render(list) {
             </button>
             <button class="btn btn-xs btn-sec" onclick="Documents.download('${d._id}', '${d.name}')" title="Download">
               ⬇ Download
+            </button>
+            <button class="btn btn-xs btn-danger" onclick="Documents.delete('${d._id}', '${d.name}')" title="Delete">
+              ✕
+            </button>
+          </div>
+          
+        </div>
+
+        <div class="div"></div>
+        <div class="fr" style="gap:8px">
+          <div>
+            <div class="fl">Tenant</div>
+            <div class="tx-sm">${d.tenant?.name || '—'}</div>
+          </div>
+          <div>
+            <div class="fl">Building</div>
+            <div class="tx-sm">${d.building?.name || '—'}</div>
+          </div>
+        </div>
+        <div class="tx-xs c-dim mt-2">
+          Uploaded by ${d.uploadedBy?.name || 'System'} • ${timeAgo(d.createdAt)}
+          ${d.fileSize ? ` • ${(d.fileSize / 1024).toFixed(1)} KB` : ''}
+        </div>
+      </div>`
+    }).join('')}</div>`);
+  },
+  */
+
+   render(list) {
+    if (!list.length) {
+      setHtml('documentList', emptyState('📁', 'No documents', 'Upload ID proofs, agreements, and receipts'));
+      return;
+    }
+    const typeColor = {
+       id_proof:'b-blue', agreement:'b-gold', receipt:'b-green', photo:'b-purple', other:'b-gray' 
+    };
+    
+    setHtml('documentList', `<div class="ga">${list.map(d => {
+      return `
+      <div class="card">
+        
+        <div class="flex items-start just-b mb-3">
+          
+          <div class="flex items-start gap-3" style="flex: 1; min-width: 0; padding-right: 12px;">
+            <div class="stat-ico ico-blue" style="font-size:24px; flex-shrink: 0;">${typeIcon(d.type)}</div>
+            
+            <div style="flex: 1; min-width: 0;">
+              <div class="fw-6 tx-sm" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${d.name}">
+                ${d.name}
+              </div>
+              <div class="mt-1">
+                <span class="badge ${typeColor[d.type]||'b-gray'}">${d.type?.replace('_',' ')}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex gap-2 flex-shrink-0">
+            <button class="btn btn-xs btn-blue" onclick="Documents.view('${d._id}')" title="View Document">
+              👁
+            </button>
+            <button class="btn btn-xs btn-sec" onclick="Documents.download('${d._id}', '${d.name}')" title="Download Document">
+              ⬇
             </button>
             <button class="btn btn-xs btn-danger" onclick="Documents.delete('${d._id}', '${d.name}')" title="Delete">
               ✕
