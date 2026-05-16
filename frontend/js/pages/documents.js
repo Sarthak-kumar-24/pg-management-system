@@ -143,14 +143,14 @@ const Documents = {
           </div>
           
           <div class="flex gap-2 flex-wrap">
-            ${d.hasFile ? `
+           
               <button class="btn btn-xs btn-blue" onclick="Documents.view('${d._id}')" title="View Document">
                 👁 View
               </button>
               <button class="btn btn-xs btn-sec" onclick="Documents.download('${d._id}', '${d.name}')" title="Download">
                 ⬇ Download
               </button>
-            ` : ''}
+           
             <button class="btn btn-xs btn-danger" onclick="Documents.delete('${d._id}', '${d.name}')" title="Delete">
               ✕
             </button>
