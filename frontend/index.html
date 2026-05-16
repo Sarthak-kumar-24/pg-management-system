@@ -664,116 +664,59 @@
             </div>
 
             <div class="fbar">
+ 
+              <select
+                class="fc sel-building"
+                id="payBldgFilter"
+                onchange="Payments.delayedLoad()"
+                style="min-width: 150px"
+              ></select>
+              <select
+                class="fc"
+                id="payStatusFilter"
+                onchange="Payments.delayedLoad()"
+                style="min-width: 120px"
+              >
+                <option value="">All Status</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="overdue">Overdue</option>
+                <option value="partial">Partial</option>
+              </select>
+              <select
+                class="fc"
+                id="payMonthFilter"
+                onchange="Payments.delayedLoad()"
+                style="min-width: 110px"
+              >
+                <option value="">All Months</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
               <!--
               <select
-                class="fc sel-building"
-                id="payBldgFilter"
-                onchange="Payments.load()"
-                style="min-width: 150px"
-              ></select>
-              <select
-                class="fc"
-                id="payStatusFilter"
-                onchange="Payments.load()"
-                style="min-width: 120px"
-              >
-                <option value="">All Status</option>
-                <option value="paid">Paid</option>
-                <option value="pending">Pending</option>
-                <option value="overdue">Overdue</option>
-                <option value="partial">Partial</option>
-              </select>
-              <select
-                class="fc"
-                id="payMonthFilter"
-                onchange="Payments.load()"
-                style="min-width: 110px"
-              >
-                <option value="">All Months</option>
-                <option value="1">January</option>
-                <option value="2">February</option>
-                <option value="3">March</option>
-                <option value="4">April</option>
-                <option value="5">May</option>
-                <option value="6">June</option>
-                <option value="7">July</option>
-                <option value="8">August</option>
-                <option value="9">September</option>
-                <option value="10">October</option>
-                <option value="11">November</option>
-                <option value="12">December</option>
-              </select>
-              <select
                 class="fc cur-year"
                 id="payYearFilter"
-                onchange="Payments.load()"
+                onchange="Payments.delayedLoad()"
                 style="min-width: 95px"
               >
                 <option value="2024">2024</option>
                 <option value="2025">2025</option>
                 <option value="2026">2026</option>
-              </select>
-              <select
-                class="fc"
-                id="payTypeFilter"
-                onchange="Payments.load()"
-                style="min-width: 110px"
-              >
-                <option value="">All Types</option>
-                <option value="rent">Rent</option>
-                <option value="deposit">Deposit</option>
-                <option value="bill">Bill</option>
-                <option value="penalty">Penalty</option>
               </select>
               -->
-              <select
-                class="fc sel-building"
-                id="payBldgFilter"
-                onchange="Payments.delayedLoad()"
-                style="min-width: 150px"
-              ></select>
-              <select
-                class="fc"
-                id="payStatusFilter"
-                onchange="Payments.delayedLoad()"
-                style="min-width: 120px"
-              >
-                <option value="">All Status</option>
-                <option value="paid">Paid</option>
-                <option value="pending">Pending</option>
-                <option value="overdue">Overdue</option>
-                <option value="partial">Partial</option>
-              </select>
-              <select
-                class="fc"
-                id="payMonthFilter"
-                onchange="Payments.delayedLoad()"
-                style="min-width: 110px"
-              >
-                <option value="">All Months</option>
-                <option value="1">January</option>
-                <option value="2">February</option>
-                <option value="3">March</option>
-                <option value="4">April</option>
-                <option value="5">May</option>
-                <option value="6">June</option>
-                <option value="7">July</option>
-                <option value="8">August</option>
-                <option value="9">September</option>
-                <option value="10">October</option>
-                <option value="11">November</option>
-                <option value="12">December</option>
-              </select>
-              <select
-                class="fc cur-year"
-                id="payYearFilter"
-                onchange="Payments.delayedLoad()"
-                style="min-width: 95px"
-              >
-                <option value="2024">2024</option>
-                <option value="2025">2025</option>
-                <option value="2026">2026</option>
-              </select>
+              <select class="fc cur-year" id="payYearFilter" onchange="Payments.delayedLoad()"></select>
+              
               <select
                 class="fc"
                 id="payTypeFilter"
@@ -845,6 +788,7 @@
                 <option value="11">November</option>
                 <option value="12">December</option>
               </select>
+              <!--
               <select
                 class="fc cur-year"
                 id="billYearFilter"
@@ -855,6 +799,8 @@
                 <option value="2025">2025</option>
                 <option value="2026">2026</option>
               </select>
+              -->
+              <select class="fc cur-year" id="billYearFilter" onchange="Bills.load()"></select>
             </div>
             <div id="billList">
               <div class="spin-wrap"><div class="spinner"></div></div>
@@ -972,6 +918,7 @@
                 <p>Financial and occupancy insights</p>
               </div>
               <div class="pg-hdr-r">
+                <!--
                 <select
                   class="fc cur-year"
                   id="rptYear"
@@ -982,6 +929,8 @@
                   <option value="2025">2025</option>
                   <option value="2026">2026</option>
                 </select>
+                -->
+                <select class="fc cur-year" id="rptYear" onchange="Reports.load()"></select>
                 <select
                   class="fc sel-building"
                   id="rptBldgFilter"
