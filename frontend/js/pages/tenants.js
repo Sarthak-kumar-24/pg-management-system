@@ -394,4 +394,23 @@ const Tenants = {
       toast(err.message, "err");
     }
   },
-};
+
+  // ─── REAL TIME AVATAR UPDATER ───
+  updateAvatarRealtime(tenantId, newPhotoUrl) {
+    // 1. Instantly update the circle on the main list
+    const cardAv = document.getElementById(`avatar-${tenantId}`);
+    if (cardAv) {
+      cardAv.innerHTML = `<img src="${newPhotoUrl}" alt="" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">`;
+      
+      // Fun extra: add a quick CSS pop animation so the admin notices it changed!
+      cardAv.style.transform = "scale(1.1)";
+      setTimeout(() => cardAv.style.transform = "scale(1)", 300);
+    }
+    
+    // 2. Instantly update the profile modal (just in case you have it open while they upload!)
+    const modalAv = document.getElementById(`profile-avatar-${tenantId}`);
+    if (modalAv) {
+      modalAv.innerHTML = `<img src="${newPhotoUrl}" alt="" style="width:100%; height:100%; object-fit:cover; border-radius:14px;">`;
+    }
+  }
+}; // <-- End of Tenants object
