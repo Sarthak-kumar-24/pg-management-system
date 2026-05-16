@@ -60,6 +60,65 @@ const Documents = {
       
     }, 5000);
   },
+   render(list) {
+    if (!list.length) {
+      setHtml('documentList', emptyState('📁', 'No documents', 'Upload ID proofs, agreements, and receipts'));
+      return;
+    }
+    const typeColor = {
+       id_proof:'b-blue', agreement:'b-gold', receipt:'b-green', photo:'b-purple', other:'b-gray' 
+    };
+    
+    setHtml('documentList', `<div class="ga">${list.map(d => {
+      // Safely grab the file URL whether your backend saves it as fileUrl or fileData
+      const fileLink = d.fileUrl || d.fileData || ''; 
+      
+      return `
+      <div class="card">
+        <div class="flex items-c just-b mb-3">
+          <div class="flex items-c gap-3">
+            <div class="stat-ico ico-blue" style="font-size:24px">${typeIcon(d.type)}</div>
+            <div>
+              <div class="fw-6 tx-sm">${d.name}</div>
+              <span class="badge ${typeColor[d.type]||'b-gray'} mt-1">${d.type?.replace('_',' ')}</span>
+            </div>
+          </div>
+          
+          <div class="flex gap-2">
+            ${fileLink ? `
+              <button class="btn btn-xs btn-blue" onclick="Documents.view('${fileLink}')" title="View Document">
+                👁 View
+              </button>
+              <button class="btn btn-xs btn-sec" onclick="Documents.download('${fileLink}', '${d.name}')" title="Download">
+                ⬇ Download
+              </button>
+            ` : ''}
+            <button class="btn btn-xs btn-danger" onclick="Documents.delete('${d._id}', '${d.name}')" title="Delete">
+              ✕
+            </button>
+          </div>
+          
+        </div>
+        <div class="div"></div>
+        <div class="fr" style="gap:8px">
+          <div>
+            <div class="fl">Tenant</div>
+            <div class="tx-sm">${d.tenant?.name || '—'}</div>
+          </div>
+          <div>
+            <div class="fl">Building</div>
+            <div class="tx-sm">${d.building?.name || '—'}</div>
+          </div>
+        </div>
+        <div class="tx-xs c-dim mt-2">
+          Uploaded by ${d.uploadedBy?.name || 'System'} • ${timeAgo(d.createdAt)}
+          ${d.fileSize ? ` • ${(d.fileSize / 1024).toFixed(1)} KB` : ''}
+        </div>
+      </div>`
+    }).join('')}</div>`);
+  },
+
+   /*
 
   render(list) {
     if (!list.length) {
@@ -102,6 +161,13 @@ const Documents = {
       </div>`).join('')}</div>`);
   },
 
+   */
+   // ─── NEW: VIEW DOCUMENT ───
+  view(url) {
+    if (!url || url === 'undefined') return toast("No file attached", "warn");
+    window.open(url, '_blank', 'noopener,noreferrer');
+  },
+
   async openForm() {
     el('docForm')?.reset();
     setHtml('docPreview', '');
@@ -132,41 +198,7 @@ const Documents = {
     };
     reader.readAsDataURL(file);
   },
-/*
-  async save() {
-    const name  = val('docFormName');
-    const type  = val('docFormType');
-    const bldg  = val('docFormBuilding');
-    const tenant= val('docFormTenant');
-    const fileInput = document.getElementById("docFile");
-    const file = fileInput.files[0];
-    if (!name || !building) return toast("Name and Building are required", "warn");
-    if (!bldg)  return toast('Please select a building', 'warn');
 
-    const file = el('docFile')?.files?.[0];
-    let fileData = null, mimeType = null, fileName = null, fileSize = null;
-
-    if (file) {
-      fileData = await new Promise(res => {
-        const r = new FileReader();
-        r.onload = e => res(e.target.result);
-        r.readAsDataURL(file);
-      });
-      mimeType  = file.type;
-      fileName  = file.name;
-      fileSize  = file.size;
-    }
-
-    try {
-      setBusy('docSaveBtn', true, 'Upload Document');
-      await Api.documents.create({ name, type, building: bldg, tenant: tenant || null, fileData, mimeType, fileName, fileSize });
-      toast('Document uploaded', 'ok');
-      closeModal('moDocument');
-      this.load();
-    } catch (err) { toast(err.message, 'err'); }
-    finally { setBusy('docSaveBtn', false, 'Upload Document'); }
-  },
-   */
 
    async save() {
     const name = val("docFormName");
@@ -225,6 +257,7 @@ const Documents = {
       setBusy("docSaveBtn", false);
     }
   },
+   /*
   async download(id, name) {
     try {
       const doc = await Api.documents.get(id);
@@ -234,6 +267,38 @@ const Documents = {
       a.download = doc.fileName || name;
       a.click();
     } catch (err) { toast(err.message, 'err'); }
+  },
+  */
+   // ─── UPGRADED: DOWNLOAD DOCUMENT ───
+  async download(url, fileName) {
+    if (!url || url === 'undefined') return toast("No file attached", "warn");
+    
+    try {
+      toast("Starting download...", "ok");
+
+      if (url.startsWith('http')) {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        url = window.URL.createObjectURL(blob);
+      }
+
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      
+      const safeName = fileName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      a.download = safeName; 
+      
+      document.body.appendChild(a);
+      a.click();
+      
+      if (url.startsWith('blob:')) window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+    } catch (err) {
+      toast("Download failed. Opening in new tab instead.", "warn");
+      window.open(url, '_blank'); 
+    }
   },
 
   async delete(id, name) {
