@@ -10,6 +10,7 @@ const documentSchema = new mongoose.Schema(
       enum: ["id_proof", "agreement", "receipt", "photo", "other"],
       default: "other",
     },
+    fileUrl: { type: String, default: "" },
     fileData: { type: String }, // base64
     mimeType: { type: String },
     fileName: { type: String },
