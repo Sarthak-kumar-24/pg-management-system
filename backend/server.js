@@ -14,7 +14,16 @@ startCronJobs();
 
 
 // ── Middleware ───────────────────────────────────────────────────
-app.use(cors({ origin: "*", credentials: true }));
+//app.use(cors({ origin: "*", credentials: true }));
+// 🛑 THE FIX: Explicitly whitelist your new domain to satisfy browser security
+app.use(cors({ 
+  origin: [
+    "https://pratham-pg.onrender.com", // Your new live URL
+    "http://localhost:5000",           // For local testing
+    "http://localhost:3000"            // If you use a separate frontend locally
+  ], 
+  credentials: true 
+}));
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 app.use(express.static(path.join(__dirname, 'public')));
