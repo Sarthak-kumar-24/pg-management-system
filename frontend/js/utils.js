@@ -130,3 +130,27 @@ function initTheme() {
     if (btn) btn.innerText = "☀️";
   }
 }
+
+
+
+// ─── DYNAMIC YEAR DROPDOWNS ───
+function initYearDropdowns() {
+  const startYear = 2024; // The year your system was created
+  const currentYear = new Date().getFullYear();
+  
+  document.querySelectorAll('.cur-year').forEach(e => { 
+    if (e.tagName === 'SELECT') {
+      e.innerHTML = ''; // Clear any hardcoded options in HTML
+      // Loop from start year up to 1 year in the future
+      for (let year = startYear; year <= currentYear + 1; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        e.appendChild(option);
+      }
+      e.value = currentYear; // Auto-select current year
+    } else {
+      e.textContent = currentYear; // For span/div labels
+    }
+  });
+}
