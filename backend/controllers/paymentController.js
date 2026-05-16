@@ -192,7 +192,8 @@ exports.stats = async (req, res, next) => {
 // POST /api/payments/electricity — Generate room electricity bills
 exports.addElectricity = async (req, res, next) => {
   try {
-    const { building, room, month, year, meterStart, meterEnd, unitRate, dueDate } = req.body;
+    //const { building, room, month, year, meterStart, meterEnd, unitRate, dueDate } = req.body;
+    const { building, room, month, year, meterStart, meterEnd, unitRate, dueDate, type, status } = req.body;
     
     // 1. Calculate the units
     const units = Number(meterEnd) - Number(meterStart);
@@ -215,10 +216,12 @@ exports.addElectricity = async (req, res, next) => {
         room: room,
         building: building,
         amount: splitAmount,
-        type: "electricity",
+       // type: "electricity",
+        type: type || "electricity",
         month: Number(month),
         year: Number(year),
-        status: "pending",
+        //status: "pending",
+        status: status || "pending",
         dueDate: dueDate || new Date(),
         meterStart: Number(meterStart),
         meterEnd: Number(meterEnd),
