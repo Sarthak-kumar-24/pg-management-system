@@ -62,6 +62,18 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
+   // ── REAL-TIME WEB SOCKETS (Avatar Updates) ───────────────────
+  if (typeof io !== 'undefined') {
+    const socket = io(); // Automatically connects to your backend URL
+
+    socket.on("avatarUpdated", (data) => {
+      // Check if the Tenants object exists (meaning they are on a page that handles tenants)
+      if (typeof Tenants !== 'undefined' && typeof Tenants.updateAvatarRealtime === 'function') {
+        Tenants.updateAvatarRealtime(data.tenantId, data.newImageUrl);
+        toast("A tenant just updated their profile picture! 📸", "ok");
+      }
+    });
+  }
 
   // ── Refresh auth token on 401s (handled in api.js already) ──
 });
