@@ -1639,7 +1639,7 @@ body.light-mode {
   --sh2: 0 2px 14px rgba(0, 0, 0, 0.05);
 }
 
-/*
+
 .tenant-avatar-img {
   width: 45px; 
   height: 45px;
@@ -1647,4 +1647,4 @@ body.light-mode {
   object-fit: cover; 
   border: 2px solid #D4AF37; 
 }
-*/
+
