@@ -1639,10 +1639,12 @@ body.light-mode {
   --sh2: 0 2px 14px rgba(0, 0, 0, 0.05);
 }
 
+/*
 .tenant-avatar-img {
-  width: 45px; /* Adjust to match your current circle size */
+  width: 45px; 
   height: 45px;
   border-radius: 50%;
-  object-fit: cover; /* Prevents the image from stretching */
-  border: 2px solid #D4AF37; /* Optional: A nice gold border */
+  object-fit: cover; 
+  border: 2px solid #D4AF37; 
 }
+*/
