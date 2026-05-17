@@ -17,7 +17,7 @@ const bedSchema = new mongoose.Schema(
 const roomSchema = new mongoose.Schema(
   {
     roomNumber: { type: String, required: true, trim: true },
-    floor: { type: Number, default: 1, min: 1 },
+    floor: { type: Number, default: 0, min: 0 },
     building: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Building",
