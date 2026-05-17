@@ -41,13 +41,14 @@ const Rooms = {
           
           // 2. Determine if the room is overbooked based on your new rules
           const isOverbooked = occ > totalBeds;
+          const floorText = (r.floor === 0 || r.floor === "0") ? "Ground Floor" : `Floor ${r.floor}`;
 
           return `
       <div class="r-card">
         <div class="r-top">
           <div>
             <div class="r-no">Room ${r.roomNumber}</div>
-            <div class="tx-xs c-muted">${r.building?.name || ""} • Floor ${r.floor} • ${r.type}</div>
+            <div class="tx-xs c-muted">${r.building?.name || ""} • ${floorText} • ${r.type}</div>
           </div>
           <div class="flex gap-2 items-c">
             ${statusBadge(r.status)}
@@ -100,7 +101,7 @@ const Rooms = {
     setText("roomModalTitle", id ? "Edit Room" : "Add Room");
     el("roomForm")?.reset();
      if (!id) {
-      setVal("rFloor", "0");
+      setVal("rFloor", "Ground");
       setVal("rBeds", "1");
       setVal("rType", "single");
       setVal("rStatus", "available");
@@ -113,7 +114,8 @@ const Rooms = {
         const r = await Api.rooms.get(id);
         setVal("rBuilding", r.building?._id || r.building);
         setVal("rNumber", r.roomNumber);
-        setVal("rFloor", r.floor);
+        //setVal("rFloor", r.floor);
+        setVal("rFloor", r.floor === 0 ? "Ground" : r.floor);
         setVal("rType", r.type);
         setVal("rBeds", r.totalBeds);
         setVal("rRent", r.monthlyRent);
@@ -129,6 +131,20 @@ const Rooms = {
   },
 
   async save() {
+
+     // 🛑 SMART PARSING: Translates words into DB-friendly numbers
+    const floorRaw = val("rFloor").toString().toLowerCase().trim();
+    let finalFloor;
+    
+    if (floorRaw === "ground" || floorRaw === "ground floor" || floorRaw === "g" || floorRaw === "0") {
+      finalFloor = 0;
+    } else {
+      finalFloor = parseInt(floorRaw, 10);
+      if (isNaN(finalFloor)) {
+        return toast("Please enter a valid floor number or type 'Ground'", "warn");
+      }
+    }
+     
     const data = {
       building: val("rBuilding"),
       roomNumber: val("rNumber"),
