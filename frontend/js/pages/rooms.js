@@ -41,7 +41,7 @@ const Rooms = {
           
           // 2. Determine if the room is overbooked based on your new rules
           const isOverbooked = occ > totalBeds;
-          const floorText = (r.floor === 0 || r.floor === "0") ? "Ground Floor" : `Floor ${r.floor}`;
+         const floorText = (r.floor === 0 || r.floor === "0" || r.floor == null) ? "Ground Floor" : `Floor ${r.floor}`;
 
           return `
       <div class="r-card">
@@ -115,7 +115,7 @@ const Rooms = {
         setVal("rBuilding", r.building?._id || r.building);
         setVal("rNumber", r.roomNumber);
         //setVal("rFloor", r.floor);
-        setVal("rFloor", r.floor === 0 ? "Ground" : r.floor);
+        setVal("rFloor", (r.floor === 0 || r.floor == null) ? "Ground" : r.floor)
         setVal("rType", r.type);
         setVal("rBeds", r.totalBeds);
         setVal("rRent", r.monthlyRent);
@@ -149,7 +149,7 @@ const Rooms = {
       building: val("rBuilding"),
       roomNumber: val("rNumber"),
      // floor: +val("rFloor") || 1,
-       floor: val("rFloor") !== "" ? Number(val("rFloor")) : 0,
+      floor: finalFloor,
       type: val("rType"),
       totalBeds: +val("rBeds") || 1,
       monthlyRent: +val("rRent"),
