@@ -1654,6 +1654,7 @@ function renderNotices(notices) {
 /* ════════════════════════════════════════════════════════════════════════════
    GUIDELINES
 ════════════════════════════════════════════════════════════════════════════ */
+  /*
 function loadGuidelines() {
   const defaultRules = [
     { title:'Quiet Hours', body:'Maintain silence between 10 PM and 6 AM. No loud music, parties or disturbances during these hours.' },
@@ -1677,6 +1678,32 @@ function loadGuidelines() {
       </div>`).join('') + `</div>`;
 
   // Also load rule notices from backend
+  loadRuleNotices();
+}
+*/
+  async function loadGuidelines() {
+  const el = document.getElementById('guidelinesList');
+  el.innerHTML = '<div class="spin-wrap"><div class="spinner"></div></div>';
+  
+  try {
+    // 🛑 Fetch live rules from the database (controlled by the Owner)
+    const rules = await api('GET', '/rules');
+    
+    if (!rules.length) {
+      el.innerHTML = `<div class="empty" style="padding: 20px;"><div class="empty-ico">📋</div><h3>No Rules Set</h3><p>Your owner hasn't added any guidelines yet.</p></div>`;
+    } else {
+      el.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px">` +
+        rules.map((r, i) => `
+          <div class="rule-card">
+            <div class="rule-num">${i + 1}</div>
+            <div class="rule-body"><h4>${r.title}</h4><p>${r.body}</p></div>
+          </div>`).join('') + `</div>`;
+    }
+  } catch (err) {
+    el.innerHTML = `<div class="empty"><p>Could not load rules: ${err.message}</p></div>`;
+  }
+
+  // Also load temporary rule notices from the backend
   loadRuleNotices();
 }
 
