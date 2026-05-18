@@ -1110,11 +1110,12 @@ function renderHero() {
   else { av.textContent = initials(t.name); }
 
   document.getElementById('heroName').textContent = t.name;
+  const floorText = (t.room?.floor === 0 || t.room?.floor === '0' || t.room?.floor == null) ? 'Ground Floor' : `Floor ${t.room?.floor}`;
   document.getElementById('heroMeta').innerHTML = `
     <span class="hero-meta-item">📱 ${t.phone}</span>
     ${t.email ? `<span class="hero-meta-item">✉️ ${t.email}</span>` : ''}
     ${t.building?.name ? `<span class="hero-meta-item">🏢 ${t.building.name}</span>` : ''}
-    ${t.room?.roomNumber ? `<span class="hero-meta-item">🚪 Room ${t.room.roomNumber}, Floor ${t.room.floor||1}</span>` : ''}
+    ${t.room?.roomNumber ? `<span class="hero-meta-item">🚪 Room ${t.room.roomNumber}, ${floorText}</span>` : ''}
     <span class="hero-meta-item">📅 Since ${fmtDate(t.joiningDate)}</span>
   `;
   document.getElementById('heroBadges').innerHTML =
