@@ -83,6 +83,13 @@ const Api = {
     update: (id, b) => Api.put(`/complaints/${id}`, b),
     delete: id      => Api.delete(`/complaints/${id}`),
   },
+   rules: {
+    list:   () => get('/rules'),
+    get:    (id) => get(`/rules/${id}`),
+    create: (d) => post('/rules', d),
+    update: (id, d) => put(`/rules/${id}`, d),
+    delete: (id) => del(`/rules/${id}`)
+  },
   notices: {
     list:   q       => Api.get('/notices' + qStr(q)),
     create: b       => Api.post('/notices', b),
