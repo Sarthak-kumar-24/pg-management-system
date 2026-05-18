@@ -140,6 +140,7 @@ const Documents = {
     }
   },
   */
+   /*
    async view(id) {
     try {
       toast("Opening...", "ok");
@@ -158,6 +159,30 @@ const Documents = {
       }
     } catch (err) {
       toast("Failed to open document", "err");
+    }
+  },
+  */
+   async view(id) {
+    try {
+      toast("Opening...", "info");
+      const doc = await Api.documents.get(id); 
+      const url = doc.fileUrl || doc.fileData;
+      if (!url) return toast("No file attached", "warn");
+
+      // 🛑 THE BLOB TRICK: Fetch the raw file into browser memory to bypass Cloudinary's strict viewer rules
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Open the clean, local memory version of the file
+      window.open(blobUrl, '_blank');
+      
+      // Clean up memory after a few seconds
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+      
+    } catch (err) {
+      toast("Failed to open document", "err");
+      console.error(err);
     }
   },
 
@@ -293,6 +318,8 @@ const Documents = {
     }
   },
   */
+
+   /*
    async download(id, fileName) {
     try {
       toast("Fetching file...", "ok");
@@ -327,6 +354,46 @@ const Documents = {
       if (doc && (doc.fileUrl || doc.fileData)) {
           window.open(doc.fileUrl || doc.fileData, '_blank'); 
       }
+    }
+  },
+  */
+   async download(id, fileName) {
+    try {
+      toast("Downloading...", "info");
+      const doc = await Api.documents.get(id);
+      const url = doc.fileUrl || doc.fileData;
+      if (!url) return toast("No file attached", "warn");
+
+      // 🛑 THE BLOB TRICK: Fetch the raw file into memory
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Create an invisible download link
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = blobUrl;
+      
+      // Keep the correct file extension (.pdf, .jpg, etc)
+      let ext = url.split('.').pop().toLowerCase();
+      if (ext.length > 4 || ext.includes('/')) ext = 'pdf'; // Safe fallback
+      
+      const safeName = (fileName ? fileName.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'document') + '.' + ext;
+      a.download = safeName; 
+      
+      // Trigger the download natively
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      }, 1000);
+      
+    } catch (err) {
+      toast("Download failed. Check your connection.", "err");
+      console.error(err);
     }
   },
 
