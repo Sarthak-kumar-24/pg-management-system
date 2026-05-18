@@ -162,6 +162,7 @@ const Documents = {
     }
   },
   */
+   /*
    async view(id) {
     try {
       toast("Opening...", "info");
@@ -178,6 +179,46 @@ const Documents = {
       window.open(blobUrl, '_blank');
       
       // Clean up memory after a few seconds
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+      
+    } catch (err) {
+      toast("Failed to open document", "err");
+      console.error(err);
+    }
+  },
+  */
+
+   async view(id) {
+    try {
+      toast("Opening...", "info");
+      const doc = await Api.documents.get(id); 
+      const url = doc.fileUrl || doc.fileData;
+      if (!url) return toast("No file attached", "warn");
+
+      // Fetch the raw data from Cloudinary
+      const response = await fetch(url);
+      
+      // Safety net: Check if Cloudinary is returning an HTML error page instead of a file
+      if (!response.ok) {
+         return toast("File blocked by Cloudinary. Please re-upload.", "err");
+      }
+      
+      const rawBlob = await response.blob();
+      
+      // 🛑 THE FIX: Explicitly tell the browser this data is a PDF!
+      let mimeType = rawBlob.type;
+      if (url.toLowerCase().includes('.pdf')) {
+         mimeType = 'application/pdf';
+      }
+      
+      // Wrap the data in the strict PDF label
+      const typedBlob = new Blob([rawBlob], { type: mimeType });
+      const blobUrl = URL.createObjectURL(typedBlob);
+      
+      // Open it! Edge/Chrome will now recognize it perfectly.
+      window.open(blobUrl, '_blank');
+      
+      // Clean up memory
       setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
       
     } catch (err) {
