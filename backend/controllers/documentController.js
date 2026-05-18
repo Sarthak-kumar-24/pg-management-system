@@ -61,6 +61,7 @@ exports.get = async (req, res) => {
 };
 
 // POST /api/documents (The unified Cloudinary Upload handler)
+/*
 exports.create = async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No file uploaded." });
@@ -90,6 +91,59 @@ exports.create = async (req, res, next) => {
       tenant: tenant || null,
       fileUrl: cloudResult.secure_url, // 🛑 The magic Cloudinary link!
       uploadedBy: req.user ? req.user.id : null // Safe check for auth
+    });
+
+    await doc.populate("tenant", "name");
+    await doc.populate("building", "name");
+    
+    res.status(201).json(doc);
+  } catch (err) {
+    // Catch Multer size limit errors cleanly
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({ error: "File exceeds the 4 MB limit." });
+    }
+    res.status(500).json({ error: err.message });
+  }
+};
+*/
+// POST /api/documents (The unified Cloudinary Upload handler)
+exports.create = async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: "No file uploaded." });
+
+    const { name, type, building, tenant } = req.body;
+
+    // 🛑 THE ULTIMATE FIX: Dynamically detect PDFs and force them into the "raw" bucket.
+    // Images (JPG/PNG) will stay as "auto" so they render properly.
+    const isPDF = req.file.mimetype === 'application/pdf';
+    const dynamicResourceType = isPDF ? 'raw' : 'auto';
+
+    // Use a Promise to handle the Cloudinary upload stream
+    const uploadToCloudinary = new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { 
+          folder: "PG_Prabhat-Pg(Noida)", 
+          resource_type: dynamicResourceType // 🛑 Cloudinary will now obey this strictly
+        }, 
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      // Pipe the file buffer from RAM directly to Cloudinary
+      stream.end(req.file.buffer);
+    });
+
+    const cloudResult = await uploadToCloudinary;
+
+    // Save the Cloudinary URL to MongoDB
+    const doc = await Document.create({
+      name,
+      type,
+      building,
+      tenant: tenant || null,
+      fileUrl: cloudResult.secure_url, 
+      uploadedBy: req.user ? req.user.id : null 
     });
 
     await doc.populate("tenant", "name");
