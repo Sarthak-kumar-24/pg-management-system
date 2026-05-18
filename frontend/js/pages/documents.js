@@ -188,7 +188,7 @@ const Documents = {
   },
   */
 
- async view(id) {
+async view(id) {
     try {
       toast("Opening...", "info");
       const doc = await Api.documents.get(id); 
@@ -196,14 +196,28 @@ const Documents = {
       
       if (!url) return toast("No file attached", "warn");
 
-      // 🛑 The Safest Method: Use Google Docs Viewer for PDFs to bypass local browser strictness
-      if (url.toLowerCase().includes('.pdf')) {
-        const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}`;
-        window.open(viewerUrl, '_blank');
-      } else {
-        // Images (JPG, PNG) open safely natively
-        window.open(url, '_blank');
+      // 1. Fetch the raw file data from Cloudinary
+      const response = await fetch(url);
+      if (!response.ok) return toast("File could not be loaded.", "err");
+
+      const rawBlob = await response.blob();
+      let mimeType = rawBlob.type;
+
+      // 🛑 THE FIX: Because Cloudinary strips the .pdf extension, the browser thinks 
+      // this is a generic unknown file ('octet-stream'). We MUST forcefully label it as a PDF!
+      if (mimeType.includes('octet-stream') || mimeType === '' || (!mimeType.includes('image') && !mimeType.includes('text'))) {
+         mimeType = 'application/pdf';
       }
+
+      // 2. Wrap the data in a strict PDF package
+      const typedBlob = new Blob([rawBlob], { type: mimeType });
+      const blobUrl = URL.createObjectURL(typedBlob);
+
+      // 3. Open it in a new tab! Edge/Chrome will now trigger their native PDF viewer.
+      window.open(blobUrl, '_blank');
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+
     } catch (err) {
       toast("Failed to open document", "err");
       console.error(err);
