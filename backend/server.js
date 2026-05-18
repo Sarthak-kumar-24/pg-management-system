@@ -40,6 +40,7 @@ app.use("/api/notices", require("./routes/notices"));
 app.use("/api/documents", require("./routes/documents"));
 app.use("/api/reports", require("./routes/reports"));
 app.use("/api/users", require("./routes/users"));
+app.use("/api/rules", require("./routes/rules"));
 
 // ── Serve Frontend ───────────────────────────────────────────────
 const frontendPath = path.join(__dirname, "../frontend");
