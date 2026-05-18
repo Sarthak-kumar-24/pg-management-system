@@ -29,6 +29,7 @@ const Nav = {
     payments:  { title: 'Payments',           load: () => Payments.load() },
     bills:     { title: 'Bills & Expenses',   load: () => Bills.load() },
     notices:   { title: 'Notices',            load: () => Notices.load() },
+     rules:     { title: 'Rules & Guidelines', load: () => Rules.load() },
     complaints:{ title: 'Complaints',         load: () => Complaints.load() },
     reports:   { title: 'Reports',            load: () => Reports.load() },
     documents: { title: 'Documents',          load: () => Documents.load() },
