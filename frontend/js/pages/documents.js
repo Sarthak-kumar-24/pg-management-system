@@ -188,39 +188,22 @@ const Documents = {
   },
   */
 
-   async view(id) {
+ async view(id) {
     try {
       toast("Opening...", "info");
       const doc = await Api.documents.get(id); 
       const url = doc.fileUrl || doc.fileData;
+      
       if (!url) return toast("No file attached", "warn");
 
-      // Fetch the raw data from Cloudinary
-      const response = await fetch(url);
-      
-      // Safety net: Check if Cloudinary is returning an HTML error page instead of a file
-      if (!response.ok) {
-         return toast("File blocked by Cloudinary. Please re-upload.", "err");
-      }
-      
-      const rawBlob = await response.blob();
-      
-      // 🛑 THE FIX: Explicitly tell the browser this data is a PDF!
-      let mimeType = rawBlob.type;
+      // 🛑 The Safest Method: Use Google Docs Viewer for PDFs to bypass local browser strictness
       if (url.toLowerCase().includes('.pdf')) {
-         mimeType = 'application/pdf';
+        const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}`;
+        window.open(viewerUrl, '_blank');
+      } else {
+        // Images (JPG, PNG) open safely natively
+        window.open(url, '_blank');
       }
-      
-      // Wrap the data in the strict PDF label
-      const typedBlob = new Blob([rawBlob], { type: mimeType });
-      const blobUrl = URL.createObjectURL(typedBlob);
-      
-      // Open it! Edge/Chrome will now recognize it perfectly.
-      window.open(blobUrl, '_blank');
-      
-      // Clean up memory
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-      
     } catch (err) {
       toast("Failed to open document", "err");
       console.error(err);
@@ -398,42 +381,62 @@ const Documents = {
     }
   },
   */
-   async download(id, fileName) {
+async download(id, fileName) {
     try {
       toast("Downloading...", "info");
       const doc = await Api.documents.get(id);
-      const url = doc.fileUrl || doc.fileData;
+      let url = doc.fileUrl || doc.fileData;
+      
       if (!url) return toast("No file attached", "warn");
 
-      // 🛑 THE BLOB TRICK: Fetch the raw file into memory
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
+      // 🛑 IMAGE BYPASS: If it's an image on Cloudinary, we force a native download using fl_attachment
+      if (url.includes('cloudinary.com/') && url.includes('/image/upload/')) {
+        url = url.replace('/upload/', '/upload/fl_attachment/');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName || 'document';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        return;
+      }
 
-      // Create an invisible download link
+      // 🛑 PDF / RAW BYPASS: Fetch the raw data and enforce the PDF MIME type locally
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+         return toast("File blocked. Ensure it was uploaded correctly.", "err");
+      }
+      
+      const rawBlob = await response.blob();
+      let mimeType = rawBlob.type;
+      if (url.toLowerCase().includes('.pdf')) {
+         mimeType = 'application/pdf';
+      }
+      
+      const typedBlob = new Blob([rawBlob], { type: mimeType });
+      const blobUrl = URL.createObjectURL(typedBlob);
+      
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = blobUrl;
       
-      // Keep the correct file extension (.pdf, .jpg, etc)
       let ext = url.split('.').pop().toLowerCase();
-      if (ext.length > 4 || ext.includes('/')) ext = 'pdf'; // Safe fallback
+      if (ext.length > 4 || ext.includes('/')) ext = 'pdf'; 
       
       const safeName = (fileName ? fileName.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'document') + '.' + ext;
       a.download = safeName; 
       
-      // Trigger the download natively
       document.body.appendChild(a);
       a.click();
       
-      // Clean up
       setTimeout(() => {
         document.body.removeChild(a);
         URL.revokeObjectURL(blobUrl);
       }, 1000);
       
     } catch (err) {
-      toast("Download failed. Check your connection.", "err");
+      toast("Download failed. Please try again.", "err");
       console.error(err);
     }
   },
