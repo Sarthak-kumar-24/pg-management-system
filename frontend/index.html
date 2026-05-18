@@ -65,6 +65,9 @@
           <span class="sb-item" data-page="notices" onclick="Nav.go('notices')"
             ><span class="sb-ico">📢</span>Notices</span
           >
+          <span class="sb-item" data-page="rules" onclick="Nav.go('rules')">
+            <span class="sb-ico">📋</span>Rules
+          </span>
           <span
             class="sb-item"
             data-page="complaints"
@@ -843,6 +846,20 @@
               </select>
             </div>
             <div id="noticeList">
+              <div class="spin-wrap"><div class="spinner"></div></div>
+            </div>
+          </section>
+          <section class="page" id="page-rules">
+            <div class="pg-hdr">
+              <div class="pg-hdr-l">
+                <h1>Rules &amp; Guidelines</h1>
+                <p>Manage PG rules visible to all tenants</p>
+              </div>
+              <div class="pg-hdr-r">
+                <button class="btn btn-primary" onclick="Rules.openForm()">+ Add Rule</button>
+              </div>
+            </div>
+            <div id="ruleAdminList">
               <div class="spin-wrap"><div class="spinner"></div></div>
             </div>
           </section>
@@ -2062,7 +2079,29 @@
         </div>
       </div>
     </div>
-
+<!---------- Rules -------------------->
+    <div class="mo" id="moRule">
+      <div class="mo-box mo-sm">
+        <div class="mo-hdr">
+          <span class="mo-title" id="ruleModalTitle">Add Rule</span>
+          <button class="mo-close" onclick="closeModal('moRule')">✕</button>
+        </div>
+        <form id="ruleForm" class="mo-body" onsubmit="event.preventDefault(); Rules.save();">
+          <div class="fg">
+            <label class="fl">Rule Title *</label>
+            <input type="text" id="ruleTitle" class="fc" placeholder="e.g. Quiet Hours" required />
+          </div>
+          <div class="fg">
+            <label class="fl">Rule Description *</label>
+            <textarea id="ruleBody" class="fc" rows="4" placeholder="Explain the rule..." required></textarea>
+          </div>
+          <div class="mo-foot" style="padding: 0; margin-top: 20px; border: none;">
+            <button type="button" class="btn btn-sec" onclick="closeModal('moRule')">Cancel</button>
+            <button type="submit" id="ruleSaveBtn" class="btn btn-primary">Save Rule</button>
+          </div>
+        </form>
+      </div>
+    </div>
     <!-- NOTICE -->
     <div class="mo" id="moNotice">
       <div class="mo-box">
@@ -2133,6 +2172,7 @@
         </div>
       </div>
     </div>
+    
 
     <!-- USER -->
     <div class="mo" id="moUser">
